@@ -9,6 +9,26 @@ const sb=(window.supabase&&window.supabase.createClient)
     })
   : null;
 
+
+function authRedirectUrl(){
+  const u=new URL('./', window.location.href);
+  u.hash=''; u.search='';
+  return u.href;
+}
+function readAuthErrorFromUrl(){
+  const hash=new URLSearchParams((window.location.hash||'').replace(/^#/,''));
+  const query=new URLSearchParams(window.location.search||'');
+  return {
+    code:hash.get('error_code')||query.get('error_code')||hash.get('error')||query.get('error'),
+    description:hash.get('error_description')||query.get('error_description')
+  };
+}
+function clearAuthErrorFromUrl(){
+  if((window.location.hash||'').includes('error')||(window.location.search||'').includes('error')){
+    history.replaceState({},document.title,authRedirectUrl());
+  }
+}
+
 let cloudUser=null;
 let householdId=null;
 let cloudReady=false;
@@ -142,8 +162,23 @@ async function openAuth(){
   <div class="field"><label>סיסמה</label><input id="authPassword" type="password" autocomplete="current-password" placeholder="לפחות 8 תווים"></div>
   <input id="authMode" type="hidden" value="login">
   <button id="authSubmit" class="btn primary" onclick="submitAuth()">כניסה</button>
+  <button class="btn" onclick="resendConfirmation()">שלח שוב מייל אימות</button>
   <div class="auth-note">החשבון משמש לסנכרון בין מכשירים. האפליקציה משתמשת רק ב‑Publishable Key הציבורי וב‑RLS כדי להגביל את הנתונים למשתמש/משפחה המחוברים.</div>
  </div>`);
+}
+
+async function resendConfirmation(){
+  const email=document.getElementById('authEmail')?.value.trim();
+  if(!email)return alert('הזן קודם את כתובת האימייל.');
+  try{
+    const r=await sb.auth.resend({
+      type:'signup',
+      email,
+      options:{emailRedirectTo:authRedirectUrl()}
+    });
+    if(r.error)throw r.error;
+    alert('מייל אימות חדש נשלח. השתמש במייל החדש ביותר.');
+  }catch(e){alert('שליחת מייל האימות נכשלה: '+cloudErrorText(e))}
 }
 function switchAuth(mode){
  document.getElementById('authMode').value=mode;
@@ -159,7 +194,11 @@ async function submitAuth(){
  const b=document.getElementById('authSubmit'); b.disabled=true; b.textContent='מתחבר...';
  try{
   const r=mode==='signup'
-    ? await sb.auth.signUp({email,password})
+    ? await sb.auth.signUp({
+        email,
+        password,
+        options:{emailRedirectTo:authRedirectUrl()}
+      })
     : await sb.auth.signInWithPassword({email,password});
   if(r.error)throw r.error;
   if(mode==='signup'&&!r.data.session){
@@ -315,6 +354,11 @@ async function handleSession(session){
 }
 async function initCloud(){
  if(!sb){showCloudBanner('לא ניתן לטעון את Supabase כרגע. האפליקציה ממשיכה לעבוד מקומית.');return}
+ const authErr=readAuthErrorFromUrl();
+ if(authErr.code){
+   showCloudBanner('אימות האימייל נכשל: '+(authErr.description||authErr.code)+'. בדוק את Site URL / Redirect URLs ב‑Supabase או שלח מייל אימות חדש.');
+   clearAuthErrorFromUrl();
+ }
  const {data,error}=await sb.auth.getSession();
  if(error){showCloudBanner(cloudErrorText(error));return}
  await handleSession(data.session);
