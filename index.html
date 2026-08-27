@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<title>Financial Control Center 1.2</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<style>
+:root{
+  --bg:#f5f7fc;--card:#fff;--ink:#132238;--muted:#6f7c91;--line:#e3e8f1;--soft:#f2f5fa;
+  --good:#0b8f74;--warn:#d97706;--bad:#d9485f;--accent:#2937a7;--shadow:0 16px 38px rgba(34,48,88,.10);
+  --blue:#5367e7;--cyan:#23a6d5;--purple:#8065d9;--pink:#d85fa8;--orange:#ee8b45;--yellow:#e9b949;--green:#32a87d;
+  --r:22px;
+}
+*{box-sizing:border-box} body{margin:0;background:
+radial-gradient(circle at 8% 0%,rgba(83,103,231,.10),transparent 28%),
+radial-gradient(circle at 92% 5%,rgba(35,166,213,.10),transparent 26%),
+var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+button,input,select,textarea{font:inherit} button{cursor:pointer}.app{max-width:1240px;margin:auto;padding:16px 16px 112px}
+.top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:16px}
+.brand h1{margin:0;font-size:clamp(24px,4vw,36px)} .brand p{margin:5px 0 0;color:var(--muted)}
+.badge{background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 11px;color:var(--muted);font-size:12px}
+.hero{background:linear-gradient(135deg,#2937a7 0%,#5367e7 48%,#23a6d5 100%);color:#fff;border-radius:28px;padding:22px;display:grid;grid-template-columns:1.1fr .9fr;gap:18px;box-shadow:var(--shadow)}
+.hero .eyebrow{opacity:.72;font-size:13px}.hero .big{font-size:clamp(38px,7vw,60px);font-weight:850;letter-spacing:-1px;margin-top:4px}
+.hero .sub{opacity:.82;margin-top:6px}.mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hero-mini{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.20);border-radius:17px;padding:13px}
+.hero-mini span{font-size:12px;opacity:.8}.hero-mini b{display:block;font-size:20px;margin-top:3px}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px;margin-top:14px}
+.c{background:rgba(255,255,255,.95);border:1px solid rgba(226,232,240,.92);border-radius:var(--r);padding:17px;box-shadow:0 7px 22px rgba(48,63,110,.055);position:relative;overflow:hidden}
+.c::before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:transparent}
+.c.accent-blue::before{background:var(--blue)}.c.accent-green::before{background:var(--green)}.c.accent-orange::before{background:var(--orange)}.c.accent-purple::before{background:var(--purple)}.c.accent-pink::before{background:var(--pink)}
+.s3{grid-column:span 3}.s4{grid-column:span 4}.s5{grid-column:span 5}.s6{grid-column:span 6}.s7{grid-column:span 7}.s8{grid-column:span 8}.s12{grid-column:span 12}
+.c h3{margin:0 0 12px;font-size:17px}.metric{font-size:29px;font-weight:850;letter-spacing:-.4px}.muted{color:var(--muted)}.small{font-size:12px}.good{color:var(--good)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--soft)}.row:last-child{border-bottom:0}
+.section{display:none}.section.active{display:block}.section-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:4px 0 14px}
+.section-head h2{margin:0;font-size:28px}.section-head p{margin:4px 0 0;color:var(--muted)}
+.btn{border:1px solid var(--line);background:#fff;border-radius:13px;padding:9px 12px;font-weight:700}.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.btn.danger{color:var(--bad)}
+.actions{display:flex;gap:8px;flex-wrap:wrap}.tag{display:inline-flex;align-items:center;gap:4px;background:var(--soft);border-radius:999px;padding:5px 8px;font-size:12px}
+.nav{position:fixed;z-index:30;bottom:12px;left:50%;transform:translateX(-50%);width:min(910px,calc(100% - 20px));background:rgba(255,255,255,.96);backdrop-filter:blur(15px);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:20px;padding:7px;display:grid;grid-template-columns:repeat(7,1fr)}
+.nav button{border:0;background:transparent;color:var(--muted);padding:8px 3px;border-radius:14px;font-size:11px;font-weight:700}.nav button span{display:block;font-size:18px;margin-bottom:2px}.nav button.active{background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;box-shadow:0 5px 14px rgba(83,103,231,.24)}
+.bar{height:9px;background:var(--soft);border-radius:999px;overflow:hidden;margin-top:7px}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--blue),var(--cyan));border-radius:inherit}
+.list{display:grid;gap:9px}.item{border:1px solid var(--line);border-radius:15px;padding:13px}.item-main{display:flex;justify-content:space-between;gap:12px}.item-title{font-weight:800}.item-meta{font-size:12px;color:var(--muted);margin-top:4px}.item-actions{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
+.mini-btn{border:1px solid var(--line);background:#fff;border-radius:9px;padding:5px 9px;font-size:12px}.empty{border:1px dashed #cbd5e1;border-radius:15px;padding:16px;text-align:center;color:var(--muted)}
+.insight{border-right:5px solid #cbd5e1;background:#f8fafc;border-radius:15px;padding:13px 14px;margin-bottom:9px}.insight.good{border-right-color:#10b981}.insight.warn{border-right-color:#f59e0b}.insight.bad{border-right-color:#ef4444}.insight b{display:block;color:var(--ink)}.insight span{font-size:13px;color:var(--muted)}
+.formgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);border-radius:11px;padding:10px;background:#fff}.field textarea{min-height:82px;resize:vertical}
+.help-line{display:flex;align-items:center;gap:5px;margin-bottom:5px}.help-line label{margin:0}.info{width:20px;height:20px;border:1px solid var(--line);border-radius:50%;padding:0;background:#fff;color:var(--muted);font-size:11px;font-weight:800}
+.modal-wrap{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(15,23,42,.48);z-index:70;padding:14px}.modal-wrap.open{display:flex}.modal{width:min(720px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:23px;padding:18px;box-shadow:var(--shadow)}.modal-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:13px}.modal-head h3{margin:0}.x{border:0;background:transparent;font-size:24px}
+.help-pop{position:fixed;display:none;z-index:90;width:min(370px,calc(100vw - 24px));background:#0f172a;color:#fff;border-radius:16px;padding:14px;box-shadow:0 20px 48px rgba(15,23,42,.3);font-size:13px;line-height:1.5}.help-pop.open{display:block}.help-pop b{display:block;margin-bottom:5px}.help-pop .ex{color:#cbd5e1;margin-top:6px}.help-pop .why{border-top:1px solid rgba(255,255,255,.15);margin-top:8px;padding-top:8px}
+.chart{height:235px;display:flex;align-items:flex-end;gap:8px;padding-top:18px}.chart-col{height:100%;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:end;gap:5px}.chart-bar{width:64%;background:linear-gradient(180deg,var(--blue),var(--purple));border-radius:9px 9px 3px 3px;min-height:4px}.chart-label{font-size:10px;color:var(--muted)}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.kpi{border:1px solid var(--line);border-radius:14px;padding:12px}.kpi span{font-size:11px;color:var(--muted)}.kpi b{display:block;font-size:19px;margin-top:2px}
+.goal-card{border:1px solid var(--line);border-radius:16px;padding:14px}.goal-top{display:flex;justify-content:space-between;gap:10px}.goal-title{font-weight:800}
+.data-quality{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.dq{padding:11px;border-radius:13px;border:1px solid var(--line);font-size:12px}.dq b{display:block;margin-bottom:3px}
+.tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}.tabbtn{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 11px;font-weight:700;font-size:12px}.tabbtn.active{background:#0f172a;color:#fff}
+.subpanel{display:none}.subpanel.active{display:block}.note{background:#eef6ff;border:1px solid #cfe2ff;color:#1e3a5f;border-radius:15px;padding:12px;font-size:13px;line-height:1.5}
+hr{border:0;border-top:1px solid var(--line);margin:15px 0}
+
+.visual-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.chart-card{min-height:285px}
+.chart-title{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
+.chart-title h3{margin:0}.chart-title .tag{background:#f5f7ff;color:#5367e7}
+.donut-wrap{display:grid;grid-template-columns:180px 1fr;align-items:center;gap:18px;min-height:200px}
+.donut{width:172px;height:172px;border-radius:50%;position:relative;margin:auto;background:conic-gradient(#5367e7 0 25%,#23a6d5 25% 50%,#8065d9 50% 75%,#32a87d 75% 100%);box-shadow:inset 0 0 0 1px rgba(255,255,255,.7)}
+.donut::after{content:"";position:absolute;inset:34px;background:#fff;border-radius:50%;box-shadow:0 0 0 1px var(--line)}
+.donut-center{position:absolute;z-index:2;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center}
+.donut-center b{font-size:22px}.donut-center span{font-size:11px;color:var(--muted)}
+.legend{display:grid;gap:9px}.legend-row{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px}.legend-label{display:flex;align-items:center;gap:7px}.dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto}
+.vbars{height:210px;display:flex;align-items:end;gap:12px;padding-top:20px}.vbar-col{flex:1;display:flex;flex-direction:column;justify-content:end;align-items:center;gap:6px;height:100%}.vbar{width:min(48px,72%);border-radius:12px 12px 5px 5px;min-height:5px;box-shadow:0 5px 12px rgba(83,103,231,.13)}.vbar.blue{background:linear-gradient(180deg,#6f7ff0,#5367e7)}.vbar.green{background:linear-gradient(180deg,#49c39c,#32a87d)}.vbar.orange{background:linear-gradient(180deg,#f1a56d,#ee8b45)}.vbar.pink{background:linear-gradient(180deg,#e48bc0,#d85fa8)}.vbar.purple{background:linear-gradient(180deg,#a18ce6,#8065d9)}
+.vbar-value{font-size:11px;font-weight:800;color:var(--ink)}.vbar-label{font-size:11px;color:var(--muted);text-align:center}
+.hbars{display:grid;gap:11px;margin-top:14px}.hbar-row{display:grid;grid-template-columns:minmax(95px,1.1fr) 2.2fr auto;align-items:center;gap:9px;font-size:12px}.hbar-track{height:10px;border-radius:999px;background:var(--soft);overflow:hidden}.hbar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--blue),var(--cyan))}
+.line-svg{width:100%;height:255px;display:block;overflow:visible}.chart-axis{stroke:#dfe5ef;stroke-width:1}.chart-line-base{fill:none;stroke:#5367e7;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}.chart-line-low{fill:none;stroke:#23a6d5;stroke-width:2.5;stroke-dasharray:7 7}.chart-line-high{fill:none;stroke:#8065d9;stroke-width:2.5;stroke-dasharray:7 7}.chart-area{fill:url(#areaGradient)}.chart-dot{fill:#fff;stroke:#5367e7;stroke-width:3}.svg-label{font-size:10px;fill:#7c889c}.chart-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--muted)}.chart-legend span{display:flex;align-items:center;gap:6px}.legend-line{width:18px;height:3px;border-radius:3px;background:#5367e7}.legend-line.low{background:#23a6d5}.legend-line.high{background:#8065d9}
+.color-stat{border-radius:16px;padding:14px;background:linear-gradient(135deg,#f7f8ff,#eef4ff);border:1px solid #e4e8ff}.color-stat.green{background:linear-gradient(135deg,#f1fbf7,#e7f8f1);border-color:#d7f0e6}.color-stat.orange{background:linear-gradient(135deg,#fff8f1,#fff0df);border-color:#f9e1c3}.color-stat.purple{background:linear-gradient(135deg,#f8f5ff,#efeafd);border-color:#e4dcfb}
+.mini-spark{height:42px;margin-top:8px;display:flex;align-items:end;gap:3px}.mini-spark i{flex:1;border-radius:4px 4px 1px 1px;background:linear-gradient(180deg,var(--cyan),var(--blue));opacity:.85}
+@media(max-width:720px){.visual-grid{grid-template-columns:1fr}.donut-wrap{grid-template-columns:1fr}.donut{width:155px;height:155px}.donut::after{inset:31px}}
+
+
+.cloud-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.cloud-pill{display:flex;align-items:center;gap:7px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 11px;font-size:12px;color:var(--muted);box-shadow:0 4px 12px rgba(48,63,110,.04)}
+.cloud-dot{width:9px;height:9px;border-radius:50%;background:#94a3b8}
+.cloud-pill.online .cloud-dot{background:#10b981;box-shadow:0 0 0 4px rgba(16,185,129,.12)}
+.cloud-pill.syncing .cloud-dot{background:#f59e0b;box-shadow:0 0 0 4px rgba(245,158,11,.12)}
+.cloud-pill.error .cloud-dot{background:#ef4444;box-shadow:0 0 0 4px rgba(239,68,68,.12)}
+.cloud-banner{display:none;margin:0 0 14px;padding:12px 14px;border-radius:16px;border:1px solid #fde3a7;background:#fff8e8;color:#7c4a03;font-size:13px;line-height:1.5}
+.cloud-banner.show{display:block}
+.auth-card{display:grid;gap:12px}
+.auth-switch{display:grid;grid-template-columns:1fr 1fr;gap:7px;background:var(--soft);padding:5px;border-radius:14px}
+.auth-switch button{border:0;background:transparent;padding:9px;border-radius:10px;font-weight:800;color:var(--muted)}
+.auth-switch button.active{background:#fff;color:var(--accent);box-shadow:0 3px 10px rgba(48,63,110,.08)}
+.auth-note{font-size:12px;color:var(--muted);line-height:1.5}
+.sync-row{display:flex;justify-content:space-between;align-items:center;gap:10px;border-top:1px solid var(--line);padding-top:12px;margin-top:12px}
+
+@media(max-width:900px){.hero{grid-template-columns:1fr}.s3,.s4,.s5,.s6,.s7,.s8{grid-column:span 12}.kpis{grid-template-columns:1fr 1fr}.data-quality{grid-template-columns:1fr 1fr}.formgrid{grid-template-columns:1fr 1fr}.nav{grid-template-columns:repeat(7,1fr)}}
+@media(max-width:560px){.app{padding:12px 11px 108px}.top{align-items:flex-start}.badge{display:none}.hero{padding:19px}.mini-grid{grid-template-columns:1fr 1fr}.formgrid,.kpis,.data-quality{grid-template-columns:1fr}.nav button{font-size:9px}.nav button span{font-size:16px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="brand"><h1>Financial Control Center</h1><p>המצב הכלכלי שלכם, מהיום ועד העתיד</p></div>
+    <div class="cloud-controls">
+  <div id="cloudPill" class="cloud-pill"><i class="cloud-dot"></i><span id="cloudStatus">מקומי · לא מחובר</span></div>
+  <button id="authButton" class="btn" onclick="openAuth()">כניסה לענן</button>
+</div>
+  </div>
+  <div id="cloudBanner" class="cloud-banner"></div>
+
+  <section id="home" class="section active">
+    <div class="hero">
+      <div><div class="eyebrow">נשאר החודש</div><div class="big" id="homeRemaining">₪0</div><div class="sub" id="homeStatus">התחל להזין נתונים כדי לקבל תמונה אמיתית</div></div>
+      <div class="mini-grid">
+        <div class="hero-mini"><span>שיעור חיסכון</span><b id="homeSaveRate">0%</b></div>
+        <div class="hero-mini"><span>שווי נקי</span><b id="homeNet">₪0</b></div>
+        <div class="hero-mini"><span>השקעות</span><b id="homeInvest">₪0</b></div>
+        <div class="hero-mini"><span>פנסיה + השתלמות</span><b id="homeRetire">₪0</b></div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="c s7 accent-purple">
+        <h3>🧠 תובנות מרכזיות</h3>
+        <div id="insightsHome"></div>
+      </div>
+      <div class="c s5 accent-green">
+        <h3>✅ איכות הנתונים</h3>
+        <div class="metric" id="completeness">0%</div>
+        <div class="muted small">ככל שהנתונים מלאים יותר, התובנות אמינות יותר.</div>
+        <div class="bar"><i id="completeBar" style="width:0%"></i></div>
+        <div id="qualityChecklist" class="data-quality" style="margin-top:12px"></div>
+      </div>
+
+      <div class="c s4 accent-blue"><h3>💸 תזרים החודש</h3><div class="row"><span>הכנסות</span><b id="hIncome">₪0</b></div><div class="row"><span>הוצאות מחיה</span><b id="hExpenses">₪0</b></div><div class="row"><span>חיסכון/השקעה</span><b id="hSavings">₪0</b></div></div>
+      <div class="c s4 accent-purple"><h3>💰 מבנה ההון</h3><div class="row"><span>נזילות</span><b id="hLiquid">₪0</b></div><div class="row"><span>השקעות</span><b id="hInvest">₪0</b></div><div class="row"><span>פנסיוני</span><b id="hRetire">₪0</b></div><div class="row"><span>נדל"ן נטו</span><b id="hProperty">₪0</b></div></div>
+      <div class="c s4 accent-orange"><h3>🎯 יעדים</h3><div id="goalSummary"></div></div>
+
+
+      <div class="c s6 chart-card accent-purple">
+        <div class="chart-title"><h3>🍩 חלוקת ההון</h3><span class="tag">מתוך השווי החיובי</span></div>
+        <div class="donut-wrap">
+          <div class="donut" id="homeWealthDonut"><div class="donut-center"><b id="homeDonutTotal">₪0</b><span>נכסים חיוביים</span></div></div>
+          <div class="legend" id="homeWealthLegend"></div>
+        </div>
+      </div>
+      <div class="c s6 chart-card accent-blue">
+        <div class="chart-title"><h3>📊 הכנסות מול הוצאות</h3><span class="tag">החודש</span></div>
+        <div class="vbars" id="homeCashBars"></div>
+      </div>
+
+      <div class="c s8 accent-blue"><h3>🔮 תחזית שווי נקי</h3><div id="homeFutureLineChart"></div><div class="small muted">תרחיש בסיס לפי ההגדרות והנתונים שהוזנו.</div></div>
+      <div class="c s4 accent-pink"><h3>📌 מה לבדוק החודש</h3><div id="monthlyActions"></div></div>
+    </div>
+  </section>
+
+  <section id="cashflow" class="section">
+    <div class="section-head"><div><h2>💸 תזרים</h2><p>הכנסות, הוצאות, חיסכון וקצב חודשי</p></div><div class="actions"><button class="btn primary" onclick="openTx('income')">+ הכנסה</button><button class="btn" onclick="openTx('expense')">+ הוצאה</button></div></div>
+    <div class="grid">
+      <div class="c s3"><div class="muted small">הכנסות</div><div class="metric" id="cfIncome">₪0</div></div>
+      <div class="c s3"><div class="muted small">הוצאות מחיה</div><div class="metric" id="cfExpenses">₪0</div></div>
+      <div class="c s3"><div class="muted small">חיסכון/השקעה</div><div class="metric" id="cfSaving">₪0</div></div>
+      <div class="c s3"><div class="muted small">נשאר</div><div class="metric" id="cfRemaining">₪0</div></div>
+      <div class="c s12">
+        <div class="kpis">
+          <div class="kpi"><span>שיעור חיסכון</span><b id="cfRate">0%</b></div>
+          <div class="kpi"><span>הוצאות קבועות / הכנסה</span><b id="cfFixedRatio">0%</b></div>
+          <div class="kpi"><span>צפוי בהמשך החודש</span><b id="cfPlanned">₪0</b></div>
+          <div class="kpi"><span>הוצאה חריגה</span><b id="cfOneoffExpense">₪0</b></div>
+        </div>
+      </div>
+
+      <div class="c s6 chart-card accent-blue">
+        <div class="chart-title"><h3>📊 תזרים לפי סוג</h3><span class="tag">החודש</span></div>
+        <div class="vbars" id="cashflowBars"></div>
+      </div>
+      <div class="c s6 chart-card accent-orange">
+        <div class="chart-title"><h3>🍩 מבנה ההוצאות</h3><span class="tag">קבוע / משתנה / חריג</span></div>
+        <div class="donut-wrap">
+          <div class="donut" id="expenseNatureDonut"><div class="donut-center"><b id="expenseDonutTotal">₪0</b><span>הוצאות מחיה</span></div></div>
+          <div class="legend" id="expenseNatureLegend"></div>
+        </div>
+      </div>
+      <div class="c s12 chart-card accent-pink">
+        <div class="chart-title"><h3>🏷️ הוצאות לפי קטגוריה</h3><span class="tag">Top categories</span></div>
+        <div class="hbars" id="categoryBars"></div>
+      </div>
+
+      <div class="c s12"><h3>עסקאות</h3><div id="txList" class="list"></div></div>
+    </div>
+  </section>
+
+  <section id="wealth" class="section">
+    <div class="section-head"><div><h2>💰 הון ונכסים</h2><p>כל החשבונות, החסכונות, הנכסים והחובות</p></div><button class="btn primary" onclick="openAccount()">+ חשבון / נכס / חוב</button></div>
+    <div class="grid">
+      <div class="c s3"><div class="muted small">שווי נקי</div><div class="metric" id="wNet">₪0</div></div>
+      <div class="c s3"><div class="muted small">נזילות</div><div class="metric" id="wLiquid">₪0</div></div>
+      <div class="c s3"><div class="muted small">פנסיוני</div><div class="metric" id="wRetire">₪0</div></div>
+      <div class="c s3"><div class="muted small">חוב כולל</div><div class="metric" id="wDebt">₪0</div></div>
+
+      <div class="c s6 chart-card accent-purple">
+        <div class="chart-title"><h3>🍩 הרכב הנכסים</h3><span class="tag">ללא חובות</span></div>
+        <div class="donut-wrap">
+          <div class="donut" id="wealthDonut"><div class="donut-center"><b id="wealthDonutTotal">₪0</b><span>סה״כ נכסים</span></div></div>
+          <div class="legend" id="wealthLegend"></div>
+        </div>
+      </div>
+      <div class="c s6 chart-card accent-green">
+        <div class="chart-title"><h3>📊 נכסים מול התחייבויות</h3><span class="tag">תמונה כוללת</span></div>
+        <div class="vbars" id="wealthBars"></div>
+      </div>
+
+      <div class="c s12"><h3>חשבונות ונכסים</h3><div id="accountList" class="list"></div></div>
+    </div>
+  </section>
+
+  <section id="invest" class="section">
+    <div class="section-head"><div><h2>📈 השקעות</h2><p>תיק השקעות + Market Lab</p></div><div class="actions"><button class="btn primary" onclick="openHolding()">+ נייר ערך</button><button class="btn" onclick="openWatch()">+ Watchlist</button></div></div>
+    <div class="tabs"><button class="tabbtn active" data-sub="portfolio">התיק שלי</button><button class="tabbtn" data-sub="watch">Market Lab</button></div>
+    <div id="portfolio" class="subpanel active">
+      <div class="grid">
+        <div class="c s4"><div class="muted small">שווי תיק מפורט</div><div class="metric" id="iPortfolioValue">₪0</div></div>
+        <div class="c s4"><div class="muted small">עלות מקורית</div><div class="metric" id="iCost">₪0</div></div>
+        <div class="c s4"><div class="muted small">רווח/הפסד לא ממומש</div><div class="metric" id="iPnL">₪0</div></div>
+
+        <div class="c s6 chart-card accent-purple">
+          <div class="chart-title"><h3>🍩 פיזור לפי סוג נכס</h3><span class="tag">מהאחזקות המפורטות</span></div>
+          <div class="donut-wrap">
+            <div class="donut" id="assetClassDonut"><div class="donut-center"><b id="assetClassTotal">₪0</b><span>אחזקות</span></div></div>
+            <div class="legend" id="assetClassLegend"></div>
+          </div>
+        </div>
+        <div class="c s6 chart-card accent-blue">
+          <div class="chart-title"><h3>📊 האחזקות הגדולות</h3><span class="tag">Top holdings</span></div>
+          <div class="hbars" id="holdingBars"></div>
+        </div>
+
+        <div class="c s12"><h3>אחזקות</h3><div id="holdingList" class="list"></div></div>
+      </div>
+    </div>
+    <div id="watch" class="subpanel">
+      <div class="grid">
+        <div class="c s12">
+          <div class="note">בגרסה הזו מחירי Watchlist מוזנים ידנית. המבנה מוכן לחיבור API בהמשך בלי לשנות את הנתונים שכבר תזין.</div>
+          <div id="watchList" class="list" style="margin-top:12px"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="retirement" class="section">
+    <div class="section-head"><div><h2>👴 פנסיה ופרישה</h2><p>יתרות, הפקדות, דמי ניהול ותחזית</p></div><button class="btn primary" onclick="openRetirement()">+ מוצר פנסיוני</button></div>
+    <div class="grid">
+      <div class="c s4"><div class="muted small">יתרה פנסיונית</div><div class="metric" id="rBalance">₪0</div></div>
+      <div class="c s4"><div class="muted small">הפקדות חודשיות</div><div class="metric" id="rDeposit">₪0</div></div>
+      <div class="c s4"><div class="muted small">תחזית בגיל פרישה</div><div class="metric" id="rProjected">₪0</div></div>
+
+      <div class="c s6 chart-card accent-purple">
+        <div class="chart-title"><h3>📊 יתרה לפי מוצר</h3><span class="tag">פנסיה / השתלמות</span></div>
+        <div class="hbars" id="retirementBalanceBars"></div>
+      </div>
+      <div class="c s6 chart-card accent-green">
+        <div class="chart-title"><h3>📊 הפקדה חודשית לפי מוצר</h3><span class="tag">קצב צבירה</span></div>
+        <div class="hbars" id="retirementDepositBars"></div>
+      </div>
+
+      <div class="c s12"><h3>מוצרים פנסיוניים</h3><div id="retirementList" class="list"></div></div>
+    </div>
+  </section>
+
+  <section id="goals" class="section">
+    <div class="section-head"><div><h2>🎯 מטרות</h2><p>רכב, חופשה, קרן חירום, לימודים וכל יעד אחר</p></div><button class="btn primary" onclick="openGoal()">+ מטרה</button></div>
+    <div class="grid"><div class="c s12"><div id="goalList" class="list"></div></div></div>
+  </section>
+
+  <section id="future" class="section">
+    <div class="section-head"><div><h2>🔮 עתיד ותובנות</h2><p>Financial Time Machine + What‑If</p></div><button class="btn" onclick="openSettings()">⚙️ הנחות</button></div>
+    <div class="grid">
+      <div class="c s12 chart-card accent-blue">
+        <div class="chart-title"><h3>📈 תחזית שווי נקי</h3><span class="tag">3 תרחישים</span></div>
+        <div id="futureLineChart"></div>
+      </div>
+      <div class="c s4"><div class="muted small">שמרני</div><div class="metric" id="fLow">₪0</div></div>
+      <div class="c s4"><div class="muted small">בסיס</div><div class="metric" id="fBase">₪0</div></div>
+      <div class="c s4"><div class="muted small">אופטימי</div><div class="metric" id="fHigh">₪0</div></div>
+      <div class="c s6">
+        <h3>What‑If: חיסכון חודשי נוסף</h3>
+        <div class="field"><label>תוספת חודשית</label><input id="whatIfSaving" type="number" value="1000" oninput="renderFuture()"></div>
+        <div class="row"><span>שווי עתידי בסיסי</span><b id="whatIfResult">₪0</b></div>
+        <div class="row"><span>תוספת לעומת המסלול הנוכחי</span><b id="whatIfDelta">₪0</b></div>
+      </div>
+      <div class="c s6"><h3>🧠 כל התובנות</h3><div id="allInsights"></div></div>
+    </div>
+  </section>
+</div>
+
+<nav class="nav">
+<button class="active" data-sec="home"><span>🏠</span>היום</button>
+<button data-sec="cashflow"><span>💸</span>תזרים</button>
+<button data-sec="wealth"><span>💰</span>הון</button>
+<button data-sec="invest"><span>📈</span>השקעות</button>
+<button data-sec="retirement"><span>👴</span>פנסיה</button>
+<button data-sec="goals"><span>🎯</span>מטרות</button>
+<button data-sec="future"><span>🔮</span>עתיד</button>
+</nav>
+
+<div id="helpPop" class="help-pop"></div>
+
+<div id="modalWrap" class="modal-wrap"><div class="modal">
+  <div class="modal-head"><h3 id="modalTitle">הזנה</h3><button class="x" onclick="closeModal()">×</button></div>
+  <div id="modalBody"></div>
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const KEY='fcc_v10_state';
+const uuid=()=>crypto.randomUUID ? crypto.randomUUID() : String(Date.now()+Math.random());
+const today=()=>new Date().toISOString().slice(0,10);
+const monthKey=()=>today().slice(0,7);
+const fmt=n=>new Intl.NumberFormat('he-IL',{style:'currency',currency:'ILS',maximumFractionDigits:0}).format(Number(n||0));
+const compact=n=>{n=Number(n||0);const a=Math.abs(n);if(a>=1e6)return '₪'+(n/1e6).toFixed(a>=1e7?1:2).replace(/\.0+$/,'')+'M';if(a>=1e3)return '₪'+Math.round(n/1e3)+'K';return fmt(n)};
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+const monthsBetween=(a,b)=>Math.max(1,Math.ceil((new Date(b)-new Date(a))/(1000*60*60*24*30.44)));
+
+const defaults={
+ settings:{targetSavingsRate:20,emergencyMonths:4,retirementAge:67,currentAge:42,baseReturn:5,lowReturn:3,highReturn:7,inflation:2.5},
+ transactions:[],
+ accounts:[],
+ holdings:[],
+ watchlist:[],
+ retirement:[],
+ goals:[]
+};
+let state=loadState();
+function loadState(){try{const s=JSON.parse(localStorage.getItem(KEY)||'null');return s?{...structuredClone(defaults),...s,settings:{...defaults.settings,...(s.settings||{})}}:structuredClone(defaults)}catch(e){return structuredClone(defaults)}}
+function persist(){localStorage.setItem(KEY,JSON.stringify(state))}
+function closeModal(){document.getElementById('modalWrap').classList.remove('open')}
+function openModal(title,body){document.getElementById('modalTitle').textContent=title;document.getElementById('modalBody').innerHTML=body;document.getElementById('modalWrap').classList.add('open')}
+document.getElementById('modalWrap').addEventListener('click',e=>{if(e.target.id==='modalWrap')closeModal()});
+
+const help={
+ txNature:['אופי העסקה','קבועה = חוזרת וצפויה; משתנה = משתנה מחודש לחודש; חד־פעמית = לא לבנות עליה תקציב קבוע.','דוגמאות: משכורת/משכנתא קבועות, סופר משתנה, החזר מס חד־פעמי.','זה מאפשר להפריד בין שוטף לרעש חד־פעמי.'],
+ saving:['חיסכון / השקעה','סמן כאשר הכסף יוצא מהעו״ש אבל נשאר חלק מההון שלך.','דוגמאות: העברה לתיק השקעות, קופת גמל להשקעה, פיקדון למטרה.','כך לא נספור חיסכון כהוצאת מחיה.'],
+ accountType:['סוג החשבון','קובע לאיזה חלק של השווי הנקי החשבון שייך.','נזילות, השקעה, נדל״ן או חוב.','הסוג משפיע על החישובים והתובנות.'],
+ pensionDeposit:['הפקדה חודשית','סה״כ הפקדה חודשית למוצר — עובד + מעסיק, אם ידוע.','אם בדוח מופיעים 2,800 ₪ הפקדה חודשית כוללת, הזן 2800.','הנתון משמש לתחזית הפרישה.'],
+ goalSaved:['כבר נצבר','כמה כסף כבר מוקצה ספציפית למטרה הזו.','אם מתוך הפיקדון 25,000 ₪ מיועדים לרכב, הזן 25000.','כדי לחשב כמה עוד צריך לחסוך בכל חודש.'],
+ holdingPrice:['מחיר נוכחי','מחיר ידני ליחידה. אין כרגע חיבור חי לשוק.','לדוגמה ETF במחיר 120 דולר/ש״ח לפי המטבע שתבחר.','בהמשך ניתן לחבר API בלי לשנות את מבנה התיק.']
+};
+function infoBtn(k){return `<button type="button" class="info" onclick="event.stopPropagation();showHelp('${k}',this)">ⓘ</button>`}
+function showHelp(k,anchor){const h=help[k];if(!h)return;const p=document.getElementById('helpPop');p.innerHTML=`<b>${h[0]}</b><div>${h[1]}</div><div class="ex">${h[2]}</div><div class="why">${h[3]}</div>`;const r=anchor.getBoundingClientRect(),w=Math.min(370,innerWidth-24);let l=Math.max(12,Math.min(innerWidth-w-12,r.left-w/2+r.width/2)),t=r.bottom+8;if(t+210>innerHeight)t=Math.max(12,r.top-200);p.style.left=l+'px';p.style.top=t+'px';p.classList.add('open')}
+document.addEventListener('click',e=>{if(!e.target.closest('#helpPop')&&!e.target.closest('.info'))document.getElementById('helpPop').classList.remove('open')});
+
+function currentTx(){return state.transactions.filter(t=>t.date?.slice(0,7)===monthKey())}
+function cash(){
+ const m=currentTx(),income=m.filter(x=>x.kind==='income').reduce((s,x)=>s+Number(x.amount),0);
+ const saving=m.filter(x=>x.kind==='expense'&&x.saving).reduce((s,x)=>s+Number(x.amount),0);
+ const expenses=m.filter(x=>x.kind==='expense'&&!x.saving).reduce((s,x)=>s+Number(x.amount),0);
+ const fixed=m.filter(x=>x.kind==='expense'&&!x.saving&&x.nature==='fixed').reduce((s,x)=>s+Number(x.amount),0);
+ const oneoffIncome=m.filter(x=>x.kind==='income'&&x.nature==='oneoff').reduce((s,x)=>s+Number(x.amount),0);
+ const oneoffExpense=m.filter(x=>x.kind==='expense'&&!x.saving&&x.nature==='oneoff').reduce((s,x)=>s+Number(x.amount),0);
+ const planned=m.filter(x=>x.status==='planned').reduce((s,x)=>s+Number(x.amount),0);
+ const actualExpenses=m.filter(x=>x.kind==='expense'&&!x.saving&&x.status!=='planned').reduce((s,x)=>s+Number(x.amount),0);
+ return {income,saving,expenses,fixed,oneoffIncome,oneoffExpense,planned,actualExpenses,remaining:income-expenses-saving,saveRate:income?saving/income*100:0};
+}
+function wealth(){
+ const sum=(types)=>state.accounts.filter(a=>types.includes(a.type)).reduce((s,a)=>s+Number(a.value||0),0);
+ const liquid=sum(['liquid']),invest=sum(['investment','provident']),property=sum(['property']),debt=sum(['debt']);
+ const retireAcc=sum(['pension','training']); const retireProducts=state.retirement.reduce((s,r)=>s+Number(r.balance||0),0);
+ const retirement=state.retirement.length ? retireProducts : retireAcc;
+ return {liquid,invest,property,debt,retirement,equity:property-debt,net:liquid+invest+retirement+property-debt};
+}
+function holdingStats(){
+ let value=0,cost=0;
+ state.holdings.forEach(h=>{value+=Number(h.units||0)*Number(h.price||0)*Number(h.fx||1);cost+=Number(h.units||0)*Number(h.avgCost||0)*Number(h.fx||1)});
+ return {value,cost,pnl:value-cost};
+}
+function retirementProjection(ratePct=state.settings.baseReturn, yearsOverride=null){
+ const years=yearsOverride===null ? Math.max(0,Number(state.settings.retirementAge)-Number(state.settings.currentAge)) : Math.max(0,Number(yearsOverride));let total=0;
+ if(state.retirement.length){
+   state.retirement.forEach(r=>{let v=Number(r.balance||0),m=Number(r.monthlyDeposit||0),rate=(Number(r.expectedReturn||ratePct)/100)/12;for(let i=0;i<years*12;i++)v=v*(1+rate)+m;total+=v});
+ }else{
+   const legacy=state.accounts.filter(a=>['pension','training'].includes(a.type)).reduce((s,a)=>s+Number(a.value||0),0);
+   total=legacy*Math.pow(1+Number(ratePct)/100,years);
+ }
+ return total;
+}
+function futureValue(ratePct,years,extra=0){
+ const w=wealth(),c=cash(); let v=w.liquid+w.invest; const monthly=Math.max(0,c.saving)+Number(extra||0),r=Number(ratePct)/100/12;
+ for(let i=0;i<years*12;i++)v=v*(1+r)+monthly;
+ const retirementFuture=retirementProjection(ratePct,years);
+ return v+retirementFuture+w.property-w.debt;
+}
+function goalCalc(g){const target=Number(g.target||0),saved=Number(g.saved||0),months=monthsBetween(today(),g.date||today());return {pct:target?Math.min(100,saved/target*100):0,needed:Math.max(0,target-saved)/months,months}}
+
+function quality(){
+ const checks=[
+  ['תזרים',state.transactions.length>=3],
+  ['נזילות',state.accounts.some(a=>a.type==='liquid')],
+  ['חובות/נדל״ן',state.accounts.some(a=>['property','debt'].includes(a.type))],
+  ['פנסיה',state.retirement.length>0 || state.accounts.some(a=>['pension','training'].includes(a.type))],
+  ['מטרות',state.goals.length>0]
+ ];
+ return {checks,pct:Math.round(checks.filter(x=>x[1]).length/checks.length*100)};
+}
+function insights(){
+ const arr=[],c=cash(),w=wealth(),q=quality(),s=state.settings;
+ if(q.pct<60)arr.push({tone:'warn',title:'התמונה עדיין חלקית',text:'השלם עוד נתונים לפני שמסתמכים על התחזיות ארוכות הטווח.'});
+ if(c.income>0){
+   if(c.remaining<0)arr.push({tone:'bad',title:'התזרים החודשי שלילי',text:`חסרים ${fmt(Math.abs(c.remaining))} כדי לסיים את החודש מאוזן.`});
+   else arr.push({tone:'good',title:'התזרים החודשי חיובי',text:`לאחר הוצאות וחיסכון נשארים ${fmt(c.remaining)}.`});
+   if(c.saveRate<s.targetSavingsRate)arr.push({tone:'warn',title:'שיעור החיסכון מתחת ליעד',text:`כעת ${c.saveRate.toFixed(1)}% לעומת יעד ${s.targetSavingsRate}%. פער של ${fmt(Math.max(0,c.income*s.targetSavingsRate/100-c.saving))} בחודש.`});
+   else arr.push({tone:'good',title:'יעד החיסכון החודשי מושג',text:`שיעור החיסכון הוא ${c.saveRate.toFixed(1)}%.`});
+   const fr=c.fixed/c.income*100;if(fr>60)arr.push({tone:'warn',title:'חלק גדול מההכנסה נעול בהוצאות קבועות',text:`הוצאות קבועות הן ${fr.toFixed(0)}% מההכנסה.`});
+ }
+ if(c.expenses>0){
+   const months=w.liquid/c.expenses;
+   if(months<s.emergencyMonths)arr.push({tone:'warn',title:'כרית הנזילות נמוכה מהיעד',text:`הנזילות מכסה בערך ${months.toFixed(1)} חודשי הוצאות, לעומת יעד ${s.emergencyMonths}.`});
+   else if(months>s.emergencyMonths+4)arr.push({tone:'warn',title:'נזילות גבוהה יחסית',text:`יש נזילות של כ־${months.toFixed(1)} חודשי הוצאות. כדאי לוודא שלכסף מעבר לכרית החירום יש יעד.`});
+   else arr.push({tone:'good',title:'כרית נזילות סבירה',text:`הנזילות מכסה בערך ${months.toFixed(1)} חודשי הוצאות.`});
+ }
+ if(w.debt>0 && (w.property+w.invest+w.liquid+w.retirement)>0){const ratio=w.debt/(w.property+w.invest+w.liquid+w.retirement)*100;if(ratio>40)arr.push({tone:'warn',title:'המינוף משמעותי',text:`החוב הוא כ־${ratio.toFixed(0)}% מסך הנכסים.`})}
+ state.goals.forEach(g=>{const z=goalCalc(g);if(z.needed>0 && c.income>0 && z.needed>c.income*.1)arr.push({tone:'warn',title:`היעד "${g.name}" דורש קצב חיסכון גבוה`,text:`נדרשים כ־${fmt(z.needed)} בחודש עד ${g.date}.`})});
+ const hs=holdingStats(); if(hs.value>0 && w.invest>0 && hs.value<w.invest*.5)arr.push({tone:'warn',title:'תיק ההשקעות המפורט עדיין חלקי',text:'שווי האחזקות המפורט נמוך משמעותית משווי חשבונות ההשקעה. התובנות על פיזור עדיין חלקיות.'});
+ if(hs.value>0 && state.holdings.length){
+   const largest=state.holdings.map(h=>({name:h.ticker,value:Number(h.units||0)*Number(h.price||0)*Number(h.fx||1)})).sort((a,b)=>b.value-a.value)[0];
+   const pct=largest.value/hs.value*100;if(pct>30)arr.push({tone:'warn',title:'ריכוזיות גבוהה באחזקה אחת',text:`${largest.name} מהווה כ־${pct.toFixed(0)}% מהתיק המפורט. כדאי לוודא שזה מכוון.`});
+ }
+ return arr.slice(0,12);
+}
+function renderInsights(target,limit=99){const box=document.getElementById(target),arr=insights().slice(0,limit);box.innerHTML=arr.length?arr.map(i=>`<div class="insight ${i.tone}"><b>${esc(i.title)}</b><span>${esc(i.text)}</span></div>`).join(''):'<div class="empty">הזן נתונים כדי לקבל תובנות.</div>'}
+
+
+const palette=['#5367e7','#23a6d5','#8065d9','#32a87d','#ee8b45','#d85fa8','#e9b949','#7c889c'];
+function sumBy(arr,keyFn,valFn){const m={};arr.forEach(x=>{const k=keyFn(x)||'אחר';m[k]=(m[k]||0)+Number(valFn(x)||0)});return m}
+function setDonut(elId,legendId,items,totalLabelId){
+  const el=document.getElementById(elId),legend=document.getElementById(legendId);if(!el||!legend)return;
+  const clean=items.filter(x=>Number(x.value)>0),total=clean.reduce((s,x)=>s+Number(x.value),0);
+  if(document.getElementById(totalLabelId))document.getElementById(totalLabelId).textContent=compact(total);
+  if(!total){el.style.background='conic-gradient(#e6eaf1 0 100%)';legend.innerHTML='<div class="empty">אין מספיק נתונים להצגה.</div>';return}
+  let acc=0,parts=[];clean.forEach((x,i)=>{const start=acc/total*100;acc+=Number(x.value);const end=acc/total*100;parts.push(`${palette[i%palette.length]} ${start}% ${end}%`)});
+  el.style.background='conic-gradient('+parts.join(',')+')';
+  legend.innerHTML=clean.map((x,i)=>`<div class="legend-row"><span class="legend-label"><i class="dot" style="background:${palette[i%palette.length]}"></i>${esc(x.label)}</span><b>${compact(x.value)} · ${(x.value/total*100).toFixed(0)}%</b></div>`).join('');
+}
+function setVBars(elId,items){
+  const box=document.getElementById(elId);if(!box)return;const mx=Math.max(...items.map(x=>Math.abs(Number(x.value)||0)),1),classes=['blue','green','orange','pink','purple'];
+  box.innerHTML=items.map((x,i)=>`<div class="vbar-col"><div class="vbar-value">${compact(x.value)}</div><div class="vbar ${classes[i%classes.length]}" style="height:${Math.max(8,Math.abs(Number(x.value)||0)/mx*78)}%"></div><div class="vbar-label">${esc(x.label)}</div></div>`).join('');
+}
+function setHBars(elId,items){
+  const box=document.getElementById(elId);if(!box)return;const clean=items.filter(x=>Number(x.value)>0),mx=Math.max(...clean.map(x=>Number(x.value)),1);
+  if(!clean.length){box.innerHTML='<div class="empty">אין מספיק נתונים להצגה.</div>';return}
+  box.innerHTML=clean.map((x,i)=>`<div class="hbar-row"><span>${esc(x.label)}</span><div class="hbar-track"><div class="hbar-fill" style="width:${Math.max(2,Number(x.value)/mx*100)}%;background:linear-gradient(90deg,${palette[i%palette.length]},${palette[(i+1)%palette.length]})"></div></div><b>${compact(x.value)}</b></div>`).join('');
+}
+function futureSeries(rate,yearsList,extra=0){return yearsList.map(y=>futureValue(rate,y,extra))}
+function renderLineSvg(elId,seriesList,compactMode=false){
+  const box=document.getElementById(elId);if(!box)return;
+  const years=[0,4,9,14,19,24,29,34],all=seriesList.flatMap(s=>s.values),max=Math.max(...all,1),min=Math.min(0,...all),W=760,H=compactMode?210:265,padX=45,padY=28,chartW=W-padX*2,chartH=H-padY*2;
+  const x=i=>padX+(i/(years.length-1))*chartW;
+  const y=v=>padY+chartH-(v-min)/(max-min||1)*chartH;
+  const path=vals=>vals.map((v,i)=>(i?'L':'M')+x(i).toFixed(1)+','+y(v).toFixed(1)).join(' ');
+  const area=vals=>`M${x(0)},${H-padY} `+vals.map((v,i)=>`L${x(i)},${y(v)}`).join(' ')+` L${x(years.length-1)},${H-padY} Z`;
+  const base=seriesList[0];
+  box.innerHTML=`<svg class="line-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    <defs><linearGradient id="areaGradient" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#5367e7" stop-opacity=".22"/><stop offset="100%" stop-color="#5367e7" stop-opacity=".02"/></linearGradient></defs>
+    ${[0,.25,.5,.75,1].map(f=>`<line class="chart-axis" x1="${padX}" x2="${W-padX}" y1="${padY+chartH*f}" y2="${padY+chartH*f}"/>`).join('')}
+    <path class="chart-area" d="${area(base.values)}"/>
+    ${seriesList.map((ser,si)=>`<path class="${si===0?'chart-line-base':si===1?'chart-line-low':'chart-line-high'}" d="${path(ser.values)}"/>`).join('')}
+    ${base.values.map((v,i)=>`<circle class="chart-dot" cx="${x(i)}" cy="${y(v)}" r="4"/><text class="svg-label" x="${x(i)}" y="${H-7}" text-anchor="middle">${new Date().getFullYear()+years[i]}</text>`).join('')}
+  </svg>
+  <div class="chart-legend">${seriesList.map((s,i)=>`<span><i class="legend-line ${i===1?'low':i===2?'high':''}"></i>${esc(s.label)}</span>`).join('')}</div>`;
+}
+function renderVisuals(){
+  const c=cash(),w=wealth(),m=currentTx(),hs=holdingStats();
+  setDonut('homeWealthDonut','homeWealthLegend',[
+    {label:'נזילות',value:w.liquid},{label:'השקעות',value:w.invest},{label:'פנסיה/השתלמות',value:w.retirement},{label:'נדל״ן',value:w.property}
+  ],'homeDonutTotal');
+  setVBars('homeCashBars',[
+    {label:'הכנסות',value:c.income},{label:'מחיה',value:c.expenses},{label:'חיסכון',value:c.saving},{label:'נשאר',value:Math.max(0,c.remaining)}
+  ]);
+  const fixed=m.filter(x=>x.kind==='expense'&&!x.saving&&x.nature==='fixed').reduce((s,x)=>s+Number(x.amount||0),0);
+  const variable=m.filter(x=>x.kind==='expense'&&!x.saving&&x.nature==='variable').reduce((s,x)=>s+Number(x.amount||0),0);
+  const oneoff=m.filter(x=>x.kind==='expense'&&!x.saving&&x.nature==='oneoff').reduce((s,x)=>s+Number(x.amount||0),0);
+  setVBars('cashflowBars',[{label:'הכנסות',value:c.income},{label:'קבועות',value:fixed},{label:'משתנות',value:variable},{label:'חריגות',value:oneoff},{label:'חיסכון',value:c.saving}]);
+  setDonut('expenseNatureDonut','expenseNatureLegend',[{label:'קבועות',value:fixed},{label:'משתנות',value:variable},{label:'חריגות',value:oneoff}],'expenseDonutTotal');
+  const cats=sumBy(m.filter(x=>x.kind==='expense'&&!x.saving),x=>x.category,x=>x.amount);
+  setHBars('categoryBars',Object.entries(cats).map(([label,value])=>({label,value})).sort((a,b)=>b.value-a.value).slice(0,8));
+  setDonut('wealthDonut','wealthLegend',[
+    {label:'נזילות',value:w.liquid},{label:'השקעות',value:w.invest},{label:'פנסיוני',value:w.retirement},{label:'נדל״ן',value:w.property}
+  ],'wealthDonutTotal');
+  setVBars('wealthBars',[{label:'נזילות',value:w.liquid},{label:'השקעות',value:w.invest},{label:'פנסיוני',value:w.retirement},{label:'נדל״ן',value:w.property},{label:'חובות',value:w.debt}]);
+
+  const assetMap=sumBy(state.holdings,x=>x.assetClass||'אחר',x=>Number(x.units||0)*Number(x.price||0)*Number(x.fx||1));
+  setDonut('assetClassDonut','assetClassLegend',Object.entries(assetMap).map(([label,value])=>({label,value})),'assetClassTotal');
+  setHBars('holdingBars',state.holdings.map(h=>({label:h.ticker,value:Number(h.units||0)*Number(h.price||0)*Number(h.fx||1)})).sort((a,b)=>b.value-a.value).slice(0,8));
+
+  setHBars('retirementBalanceBars',state.retirement.map(r=>({label:r.name,value:Number(r.balance||0)})).sort((a,b)=>b.value-a.value));
+  setHBars('retirementDepositBars',state.retirement.map(r=>({label:r.name,value:Number(r.monthlyDeposit||0)})).sort((a,b)=>b.value-a.value));
+
+  const yrs=[0,4,9,14,19,24,29,34];
+  renderLineSvg('homeFutureLineChart',[{label:'בסיס',values:futureSeries(state.settings.baseReturn,yrs)}],true);
+  renderLineSvg('futureLineChart',[
+    {label:'בסיס',values:futureSeries(state.settings.baseReturn,yrs)},
+    {label:'שמרני',values:futureSeries(state.settings.lowReturn,yrs)},
+    {label:'אופטימי',values:futureSeries(state.settings.highReturn,yrs)}
+  ]);
+}
+
+function render(){
+ const c=cash(),w=wealth(),q=quality(),hs=holdingStats();
+ document.getElementById('homeRemaining').textContent=fmt(c.remaining);
+ document.getElementById('homeSaveRate').textContent=c.saveRate.toFixed(1)+'%';document.getElementById('homeNet').textContent=compact(w.net);document.getElementById('homeInvest').textContent=compact(w.invest);document.getElementById('homeRetire').textContent=compact(w.retirement);
+ document.getElementById('homeStatus').textContent=q.pct<60?'השלם עוד נתונים כדי להפעיל את מלוא התובנות':(c.remaining>=0?'החודש נמצא כרגע באיזון חיובי':'החודש דורש תשומת לב');
+ ['hIncome','cfIncome'].forEach(id=>document.getElementById(id).textContent=fmt(c.income));['hExpenses'].forEach(id=>document.getElementById(id).textContent=fmt(c.expenses));document.getElementById('hSavings').textContent=fmt(c.saving);
+ document.getElementById('hLiquid').textContent=fmt(w.liquid);document.getElementById('hInvest').textContent=fmt(w.invest);document.getElementById('hRetire').textContent=fmt(w.retirement);document.getElementById('hProperty').textContent=fmt(w.equity);
+ document.getElementById('cfExpenses').textContent=fmt(c.expenses);document.getElementById('cfSaving').textContent=fmt(c.saving);document.getElementById('cfRemaining').textContent=fmt(c.remaining);document.getElementById('cfRate').textContent=c.saveRate.toFixed(1)+'%';document.getElementById('cfFixedRatio').textContent=(c.income?c.fixed/c.income*100:0).toFixed(1)+'%';document.getElementById('cfPlanned').textContent=fmt(c.planned);document.getElementById('cfOneoffExpense').textContent=fmt(c.oneoffExpense);
+ document.getElementById('wNet').textContent=fmt(w.net);document.getElementById('wLiquid').textContent=fmt(w.liquid);document.getElementById('wRetire').textContent=fmt(w.retirement);document.getElementById('wDebt').textContent=fmt(w.debt);
+ document.getElementById('iPortfolioValue').textContent=fmt(hs.value);document.getElementById('iCost').textContent=fmt(hs.cost);document.getElementById('iPnL').textContent=fmt(hs.pnl);document.getElementById('iPnL').className='metric '+(hs.pnl>=0?'good':'bad');
+ const rd=state.retirement.reduce((s,r)=>s+Number(r.monthlyDeposit||0),0),rb=state.retirement.reduce((s,r)=>s+Number(r.balance||0),0);document.getElementById('rBalance').textContent=fmt(rb);document.getElementById('rDeposit').textContent=fmt(rd);document.getElementById('rProjected').textContent=compact(retirementProjection());
+ document.getElementById('completeness').textContent=q.pct+'%';document.getElementById('completeBar').style.width=q.pct+'%';document.getElementById('qualityChecklist').innerHTML=q.checks.map(x=>`<div class="dq"><b>${x[1]?'✅':'⬜'} ${x[0]}</b>${x[1]?'קיים':'חסר'}</div>`).join('');
+ renderInsights('insightsHome',4);renderInsights('allInsights',12);renderTx();renderAccounts();renderHoldings();renderWatch();renderRetirement();renderGoals();renderFuture();renderGoalSummary();renderMonthlyActions();renderVisuals();
+}
+function renderMonthlyActions(){const arr=insights().filter(i=>i.tone!=='good').slice(0,4);document.getElementById('monthlyActions').innerHTML=arr.length?arr.map(i=>`<div class="row"><span>${esc(i.title)}</span><span>›</span></div>`).join(''):'<div class="empty">אין כרגע נושא דחוף שזוהה.</div>'}
+function renderGoalSummary(){const b=document.getElementById('goalSummary');if(!state.goals.length){b.innerHTML='<div class="empty">עדיין אין מטרות</div>';return}b.innerHTML=state.goals.slice(0,3).map(g=>{const z=goalCalc(g);return `<div style="margin-bottom:10px"><div class="goal-top"><span>${esc(g.name)}</span><b>${z.pct.toFixed(0)}%</b></div><div class="bar"><i style="width:${z.pct}%"></i></div></div>`}).join('')}
+
+function renderTx(){const box=document.getElementById('txList'),arr=[...state.transactions].sort((a,b)=>(b.date||'').localeCompare(a.date||''));box.innerHTML=arr.length?arr.map(t=>`<div class="item"><div class="item-main"><div><div class="item-title">${t.kind==='income'?'⬆️':'⬇️'} ${esc(t.desc)}</div><div class="item-meta">${t.date} · ${esc(t.category)} · ${t.nature==='fixed'?'קבועה':t.nature==='variable'?'משתנה':'חד־פעמית'} · ${t.status==='planned'?'צפויה':'בוצעה'}${t.saving?' · חיסכון/השקעה':''}</div></div><b class="${t.kind==='income'?'good':'bad'}">${t.kind==='income'?'+':'−'}${fmt(t.amount)}</b></div><div class="item-actions"><button class="mini-btn" onclick="openTx('${t.kind}','${t.id}')">עריכה</button><button class="mini-btn" onclick="del('transactions','${t.id}')">מחיקה</button></div></div>`).join(''):'<div class="empty">אין עסקאות. הוסף הכנסה או הוצאה.</div>'}
+function openTx(kind,id=''){const t=state.transactions.find(x=>x.id===id)||{id:'',kind,date:today(),amount:'',desc:'',category:kind==='income'?'משכורת':'מזון',nature:kind==='income'?'fixed':'variable',saving:false,status:'actual'};openModal(id?'עריכת עסקה':(kind==='income'?'הוספת הכנסה':'הוספת הוצאה'),`
+<input id="mId" type="hidden" value="${t.id}"><input id="mKind" type="hidden" value="${t.kind}">
+<div class="formgrid">
+<div class="field"><label>תאריך</label><input id="mDate" type="date" value="${t.date}"></div>
+<div class="field"><label>סכום</label><input id="mAmount" type="number" value="${t.amount}"></div>
+<div class="field"><label>תיאור</label><input id="mDesc" value="${esc(t.desc)}" placeholder="למשל: משכורת / סופר"></div>
+<div class="field"><label>קטגוריה</label><select id="mCategory">${['משכורת','קצבה','עבודה צדדית','החזר/מענק','מזון','רכב','בית','ילדים','בילויים','בריאות','מנויים','חופשה','אחר'].map(x=>`<option ${x===t.category?'selected':''}>${x}</option>`).join('')}</select></div>
+<div class="field"><div class="help-line"><label>אופי העסקה</label>${infoBtn('txNature')}</div><select id="mNature"><option value="fixed" ${t.nature==='fixed'?'selected':''}>קבועה</option><option value="variable" ${t.nature==='variable'?'selected':''}>משתנה</option><option value="oneoff" ${t.nature==='oneoff'?'selected':''}>חד־פעמית / חריגה</option></select></div>
+<div class="field"><div class="help-line"><label>חיסכון / השקעה?</label>${infoBtn('saving')}</div><select id="mSaving"><option value="no">לא</option><option value="yes" ${t.saving?'selected':''}>כן</option></select></div>
+<div class="field"><label>סטטוס</label><select id="mStatus"><option value="actual" ${t.status!=='planned'?'selected':''}>בוצעה / התקבלה</option><option value="planned" ${t.status==='planned'?'selected':''}>צפויה בהמשך החודש</option></select></div>
+</div><div class="actions" style="margin-top:14px"><button class="btn primary" onclick="saveTx()">שמור</button></div>`)}
+function saveTx(){const id=document.getElementById('mId').value||uuid(),item={id,kind:document.getElementById('mKind').value,date:document.getElementById('mDate').value,amount:Number(document.getElementById('mAmount').value||0),desc:document.getElementById('mDesc').value.trim(),category:document.getElementById('mCategory').value,nature:document.getElementById('mNature').value,saving:document.getElementById('mSaving').value==='yes',status:document.getElementById('mStatus').value};if(!item.date||!item.amount||!item.desc)return alert('יש למלא תאריך, סכום ותיאור.');upsert('transactions',item);closeModal();render()}
+
+function renderAccounts(){const labels={liquid:'נזילות',investment:'חשבון השקעות',provident:'קופת גמל להשקעה',property:'נדל״ן',debt:'חוב',pension:'פנסיה (סכום בלבד)',training:'השתלמות (סכום בלבד)'};const b=document.getElementById('accountList');b.innerHTML=state.accounts.length?state.accounts.map(a=>`<div class="item"><div class="item-main"><div><div class="item-title">${esc(a.name)}</div><div class="item-meta">${labels[a.type]||a.type}${a.owner?' · '+esc(a.owner):''}${a.provider?' · '+esc(a.provider):''}</div></div><b class="${a.type==='debt'?'bad':''}">${a.type==='debt'?'−':''}${fmt(a.value)}</b></div><div class="item-actions"><button class="mini-btn" onclick="openAccount('${a.id}')">עריכה</button><button class="mini-btn" onclick="del('accounts','${a.id}')">מחיקה</button></div></div>`).join(''):'<div class="empty">אין חשבונות. התחל מעו״ש/פיקדון, תיק השקעות, נדל״ן וחובות.</div>'}
+function openAccount(id=''){const a=state.accounts.find(x=>x.id===id)||{id:'',name:'',type:'liquid',value:'',owner:'משותף',provider:'',note:'',monthlyPayment:'',interest:''};openModal(id?'עריכת חשבון':'הוספת חשבון / נכס / חוב',`
+<input id="mId" type="hidden" value="${a.id}"><div class="formgrid">
+<div class="field"><label>שם</label><input id="aName" value="${esc(a.name)}" placeholder="למשל: עו״ש משותף"></div>
+<div class="field"><div class="help-line"><label>סוג</label>${infoBtn('accountType')}</div><select id="aType">${[['liquid','עו״ש / מזומן / פיקדון'],['investment','חשבון השקעות'],['provident','קופת גמל להשקעה'],['property','נדל״ן'],['debt','משכנתא / הלוואה'],['pension','פנסיה - סכום בלבד'],['training','קרן השתלמות - סכום בלבד']].map(x=>`<option value="${x[0]}" ${x[0]===a.type?'selected':''}>${x[1]}</option>`).join('')}</select></div>
+<div class="field"><label>יתרה / שווי נוכחי</label><input id="aValue" type="number" value="${a.value}"></div>
+<div class="field"><label>בעלים</label><input id="aOwner" value="${esc(a.owner||'')}"></div>
+<div class="field"><label>גוף מנהל / בנק</label><input id="aProvider" value="${esc(a.provider||'')}"></div>
+<div class="field"><label>הערה</label><input id="aNote" value="${esc(a.note||'')}"></div>
+<div class="field"><label>החזר חודשי (אם חוב)</label><input id="aPayment" type="number" value="${a.monthlyPayment||''}"></div>
+<div class="field"><label>ריבית שנתית % (אם חוב)</label><input id="aInterest" type="number" step="0.01" value="${a.interest||''}"></div>
+</div><div class="actions" style="margin-top:14px"><button class="btn primary" onclick="saveAccount()">שמור</button></div>`)}
+function saveAccount(){const id=document.getElementById('mId').value||uuid(),item={id,name:document.getElementById('aName').value.trim(),type:document.getElementById('aType').value,value:Number(document.getElementById('aValue').value||0),owner:document.getElementById('aOwner').value.trim(),provider:document.getElementById('aProvider').value.trim(),note:document.getElementById('aNote').value.trim(),monthlyPayment:Number(document.getElementById('aPayment').value||0),interest:Number(document.getElementById('aInterest').value||0)};if(!item.name||!item.value)return alert('יש למלא שם ויתרה/שווי.');upsert('accounts',item);closeModal();render()}
+
+function renderHoldings(){const b=document.getElementById('holdingList');b.innerHTML=state.holdings.length?state.holdings.map(h=>{const v=Number(h.units)*Number(h.price)*Number(h.fx||1),c=Number(h.units)*Number(h.avgCost)*Number(h.fx||1),p=v-c;return `<div class="item"><div class="item-main"><div><div class="item-title">${esc(h.ticker)} · ${esc(h.name||'')}</div><div class="item-meta">${h.assetClass||'מניה'} · ${h.units} יחידות · מחיר ${h.price} ${esc(h.currency||'')}</div></div><div><b>${fmt(v)}</b><div class="${p>=0?'good':'bad'} small">${p>=0?'+':''}${fmt(p)}</div></div></div><div class="item-actions"><button class="mini-btn" onclick="openHolding('${h.id}')">עריכה</button><button class="mini-btn" onclick="del('holdings','${h.id}')">מחיקה</button></div></div>`}).join(''):'<div class="empty">אין עדיין אחזקות מפורטות.</div>'}
+function openHolding(id=''){const h=state.holdings.find(x=>x.id===id)||{id:'',ticker:'',name:'',units:'',avgCost:'',price:'',currency:'USD',fx:1,assetClass:'מניה',region:'',sector:''};openModal(id?'עריכת אחזקה':'הוספת נייר ערך',`
+<input id="mId" type="hidden" value="${h.id}"><div class="formgrid">
+<div class="field"><label>Ticker</label><input id="hTicker" value="${esc(h.ticker)}" placeholder="AAPL / VOO"></div><div class="field"><label>שם</label><input id="hName" value="${esc(h.name)}"></div>
+<div class="field"><label>יחידות</label><input id="hUnits" type="number" step="0.0001" value="${h.units}"></div><div class="field"><label>מחיר קנייה ממוצע</label><input id="hCost" type="number" step="0.0001" value="${h.avgCost}"></div>
+<div class="field"><div class="help-line"><label>מחיר נוכחי</label>${infoBtn('holdingPrice')}</div><input id="hPrice" type="number" step="0.0001" value="${h.price}"></div>
+<div class="field"><label>מטבע</label><select id="hCurrency"><option ${h.currency==='USD'?'selected':''}>USD</option><option ${h.currency==='ILS'?'selected':''}>ILS</option><option ${h.currency==='EUR'?'selected':''}>EUR</option></select></div>
+<div class="field"><label>שער לש״ח</label><input id="hFx" type="number" step="0.0001" value="${h.fx}"></div><div class="field"><label>סוג נכס</label><select id="hClass">${['מניה','ETF','אג"ח','קרן','אחר'].map(x=>`<option ${x===h.assetClass?'selected':''}>${x}</option>`).join('')}</select></div>
+<div class="field"><label>אזור</label><input id="hRegion" value="${esc(h.region)}"></div><div class="field"><label>סקטור</label><input id="hSector" value="${esc(h.sector)}"></div>
+</div><div class="actions" style="margin-top:14px"><button class="btn primary" onclick="saveHolding()">שמור</button></div>`)}
+function saveHolding(){const id=document.getElementById('mId').value||uuid(),item={id,ticker:document.getElementById('hTicker').value.trim().toUpperCase(),name:document.getElementById('hName').value.trim(),units:Number(document.getElementById('hUnits').value||0),avgCost:Number(document.getElementById('hCost').value||0),price:Number(document.getElementById('hPrice').value||0),currency:document.getElementById('hCurrency').value,fx:Number(document.getElementById('hFx').value||1),assetClass:document.getElementById('hClass').value,region:document.getElementById('hRegion').value.trim(),sector:document.getElementById('hSector').value.trim()};if(!item.ticker||!item.units)return alert('יש למלא Ticker וכמות.');upsert('holdings',item);closeModal();render()}
+
+function watchScore(w){const vals=[w.quality,w.growth,w.valuation].map(Number).filter(x=>Number.isFinite(x)&&x>0);return vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:null}
+function renderWatch(){const b=document.getElementById('watchList');b.innerHTML=state.watchlist.length?state.watchlist.map(w=>{const gap=w.current&&w.target?(Number(w.target)-Number(w.current))/Number(w.current)*100:null,score=watchScore(w);return `<div class="item"><div class="item-main"><div><div class="item-title">🔬 ${esc(w.ticker)} · ${esc(w.name||'')}</div><div class="item-meta">${esc(w.status||'מעקב')} · ${esc(w.thesis||'')}</div><div class="item-meta">Quality ${w.quality||'—'} · Growth ${w.growth||'—'} · Valuation ${w.valuation||'—'}</div></div><div>${score!==null?`<b>${score.toFixed(0)}/100</b><div class="small muted">Watch Score</div>`:(gap!==null?`<b class="${gap>0?'good':'warn'}">${gap.toFixed(1)}%</b><div class="small muted">עד מחיר היעד</div>`:'')}</div></div><div class="item-actions"><button class="mini-btn" onclick="openWatch('${w.id}')">עריכה</button><button class="mini-btn" onclick="del('watchlist','${w.id}')">מחיקה</button></div></div>`}).join(''):'<div class="empty">אין מניות/ETF ב־Watchlist.</div>'}
+function openWatch(id=''){const w=state.watchlist.find(x=>x.id===id)||{id:'',ticker:'',name:'',current:'',target:'',status:'מחקר',thesis:'',quality:'',growth:'',valuation:''};openModal(id?'עריכת Watchlist':'הוספה ל־Market Lab',`<input id="mId" type="hidden" value="${w.id}"><div class="formgrid"><div class="field"><label>Ticker</label><input id="wTicker" value="${esc(w.ticker)}"></div><div class="field"><label>שם</label><input id="wName" value="${esc(w.name)}"></div><div class="field"><label>מחיר נוכחי</label><input id="wCurrent" type="number" value="${w.current}"></div><div class="field"><label>מחיר יעד אישי</label><input id="wTarget" type="number" value="${w.target}"></div><div class="field"><label>סטטוס</label><select id="wStatus">${['מחקר','ממתין למחיר','מעניין','דוח קרוב'].map(x=>`<option ${x===w.status?'selected':''}>${x}</option>`).join('')}</select></div>
+<div class="field"><label>Quality (0–100)</label><input id="wQuality" type="number" min="0" max="100" value="${w.quality||''}"></div>
+<div class="field"><label>Growth (0–100)</label><input id="wGrowth" type="number" min="0" max="100" value="${w.growth||''}"></div>
+<div class="field"><label>Valuation (0–100)</label><input id="wValuation" type="number" min="0" max="100" value="${w.valuation||''}"></div>
+<div class="field"><label>תזה / למה במעקב</label><textarea id="wThesis">${esc(w.thesis)}</textarea></div></div><div class="actions" style="margin-top:14px"><button class="btn primary" onclick="saveWatch()">שמור</button></div>`)}
+function saveWatch(){const id=document.getElementById('mId').value||uuid(),item={id,ticker:document.getElementById('wTicker').value.trim().toUpperCase(),name:document.getElementById('wName').value.trim(),current:Number(document.getElementById('wCurrent').value||0),target:Number(document.getElementById('wTarget').value||0),status:document.getElementById('wStatus').value,thesis:document.getElementById('wThesis').value.trim(),quality:Number(document.getElementById('wQuality').value||0),growth:Number(document.getElementById('wGrowth').value||0),valuation:Number(document.getElementById('wValuation').value||0)};if(!item.ticker)return alert('יש למלא Ticker.');upsert('watchlist',item);closeModal();render()}
+
+function renderRetirement(){const b=document.getElementById('retirementList');b.innerHTML=state.retirement.length?state.retirement.map(r=>`<div class="item"><div class="item-main"><div><div class="item-title">${esc(r.name)}</div><div class="item-meta">${esc(r.owner)} · ${esc(r.provider)} · ${esc(r.track||'')}</div></div><div><b>${fmt(r.balance)}</b><div class="small muted">${fmt(r.monthlyDeposit)}/חודש</div></div></div><div class="item-actions"><button class="mini-btn" onclick="openRetirement('${r.id}')">עריכה</button><button class="mini-btn" onclick="del('retirement','${r.id}')">מחיקה</button></div></div>`).join(''):'<div class="empty">אין מוצרים פנסיוניים מפורטים.</div>'}
+function openRetirement(id=''){const r=state.retirement.find(x=>x.id===id)||{id:'',name:'',owner:'',provider:'',balance:'',monthlyDeposit:'',feeAssets:'',feeDeposit:'',track:'',expectedReturn:state.settings.baseReturn};openModal(id?'עריכת מוצר פנסיוני':'הוספת מוצר פנסיוני',`<input id="mId" type="hidden" value="${r.id}"><div class="formgrid">
+<div class="field"><label>שם</label><input id="rName" value="${esc(r.name)}" placeholder="פנסיה שלי"></div><div class="field"><label>בעלים</label><input id="rOwner" value="${esc(r.owner)}"></div><div class="field"><label>גוף מנהל</label><input id="rProvider" value="${esc(r.provider)}"></div>
+<div class="field"><label>יתרה נוכחית</label><input id="rBal" type="number" value="${r.balance}"></div><div class="field"><div class="help-line"><label>הפקדה חודשית כוללת</label>${infoBtn('pensionDeposit')}</div><input id="rDep" type="number" value="${r.monthlyDeposit}"></div>
+<div class="field"><label>דמי ניהול מצבירה %</label><input id="rFeeA" type="number" step="0.01" value="${r.feeAssets}"></div><div class="field"><label>דמי ניהול מהפקדה %</label><input id="rFeeD" type="number" step="0.01" value="${r.feeDeposit}"></div>
+<div class="field"><label>מסלול</label><input id="rTrack" value="${esc(r.track)}"></div><div class="field"><label>תשואה שנתית להנחה %</label><input id="rReturn" type="number" step="0.1" value="${r.expectedReturn}"></div>
+</div><div class="actions" style="margin-top:14px"><button class="btn primary" onclick="saveRetirement()">שמור</button></div>`)}
+function saveRetirement(){const id=document.getElementById('mId').value||uuid(),item={id,name:document.getElementById('rName').value.trim(),owner:document.getElementById('rOwner').value.trim(),provider:document.getElementById('rProvider').value.trim(),balance:Number(document.getElementById('rBal').value||0),monthlyDeposit:Number(document.getElementById('rDep').value||0),feeAssets:Number(document.getElementById('rFeeA').value||0),feeDeposit:Number(document.getElementById('rFeeD').value||0),track:document.getElementById('rTrack').value.trim(),expectedReturn:Number(document.getElementById('rReturn').value||state.settings.baseReturn)};if(!item.name||!item.balance)return alert('יש למלא שם ויתרה.');upsert('retirement',item);closeModal();render()}
+
+function renderGoals(){const b=document.getElementById('goalList');b.innerHTML=state.goals.length?state.goals.map(g=>{const z=goalCalc(g);return `<div class="goal-card"><div class="goal-top"><div><div class="goal-title">${esc(g.icon||'🎯')} ${esc(g.name)}</div><div class="item-meta">יעד ${fmt(g.target)} · עד ${g.date} · ${esc(g.priority||'')}</div></div><b>${z.pct.toFixed(0)}%</b></div><div class="bar"><i style="width:${z.pct}%"></i></div><div class="row"><span>כבר נצבר</span><b>${fmt(g.saved)}</b></div><div class="row"><span>נדרש לחודש</span><b>${fmt(z.needed)}</b></div><div class="item-actions"><button class="mini-btn" onclick="openGoal('${g.id}')">עריכה</button><button class="mini-btn" onclick="del('goals','${g.id}')">מחיקה</button></div></div>`}).join(''):'<div class="empty">אין מטרות. הוסף מטרה ראשונה.</div>'}
+function openGoal(id=''){const g=state.goals.find(x=>x.id===id)||{id:'',name:'',icon:'🎯',target:'',saved:'',date:today().slice(0,4)+'-12-31',priority:'בינונית'};openModal(id?'עריכת מטרה':'הוספת מטרה',`<input id="mId" type="hidden" value="${g.id}"><div class="formgrid"><div class="field"><label>שם</label><input id="gName" value="${esc(g.name)}" placeholder="רכב הבא"></div><div class="field"><label>אייקון</label><input id="gIcon" value="${esc(g.icon)}"></div><div class="field"><label>סכום יעד</label><input id="gTarget" type="number" value="${g.target}"></div><div class="field"><div class="help-line"><label>כבר נצבר</label>${infoBtn('goalSaved')}</div><input id="gSaved" type="number" value="${g.saved}"></div><div class="field"><label>מועד יעד</label><input id="gDate" type="date" value="${g.date}"></div><div class="field"><label>עדיפות</label><select id="gPriority">${['גבוהה','בינונית','נמוכה'].map(x=>`<option ${x===g.priority?'selected':''}>${x}</option>`).join('')}</select></div></div><div class="actions" style="margin-top:14px"><button class="btn primary" onclick="saveGoal()">שמור</button></div>`)}
+function saveGoal(){const id=document.getElementById('mId').value||uuid(),item={id,name:document.getElementById('gName').value.trim(),icon:document.getElementById('gIcon').value.trim(),target:Number(document.getElementById('gTarget').value||0),saved:Number(document.getElementById('gSaved').value||0),date:document.getElementById('gDate').value,priority:document.getElementById('gPriority').value};if(!item.name||!item.target||!item.date)return alert('יש למלא שם, יעד ותאריך.');upsert('goals',item);closeModal();render()}
+
+function renderChart(id,rate,extra=0){const years=[0,4,9,14,19,24,29,34],vals=years.map(y=>futureValue(rate,y,extra)),mx=Math.max(...vals,1),box=document.getElementById(id);box.innerHTML='';years.forEach((y,i)=>{const col=document.createElement('div');col.className='chart-col';const v=document.createElement('div');v.className='chart-label';v.textContent=compact(vals[i]);const bar=document.createElement('div');bar.className='chart-bar';bar.style.height=Math.max(7,vals[i]/mx*82)+'%';const l=document.createElement('div');l.className='chart-label';l.textContent=new Date().getFullYear()+y;col.append(v,bar,l);box.appendChild(col)})}
+function renderFuture(){const years=Math.max(1,state.settings.retirementAge-state.settings.currentAge),low=futureValue(state.settings.lowReturn,years),base=futureValue(state.settings.baseReturn,years),high=futureValue(state.settings.highReturn,years);document.getElementById('fLow').textContent=compact(low);document.getElementById('fBase').textContent=compact(base);document.getElementById('fHigh').textContent=compact(high);const extra=Number(document.getElementById('whatIfSaving')?.value||1000),what=futureValue(state.settings.baseReturn,years,extra);document.getElementById('whatIfResult').textContent=compact(what);document.getElementById('whatIfDelta').textContent=compact(what-base)}
+function openSettings(){const s=state.settings;openModal('הנחות וחישובים',`<div class="formgrid"><div class="field"><label>גיל נוכחי</label><input id="sAge" type="number" value="${s.currentAge}"></div><div class="field"><label>גיל פרישה</label><input id="sRetAge" type="number" value="${s.retirementAge}"></div><div class="field"><label>יעד שיעור חיסכון %</label><input id="sSave" type="number" value="${s.targetSavingsRate}"></div><div class="field"><label>יעד קרן חירום (חודשים)</label><input id="sEmergency" type="number" value="${s.emergencyMonths}"></div><div class="field"><label>תשואה שמרנית %</label><input id="sLow" type="number" step="0.1" value="${s.lowReturn}"></div><div class="field"><label>תשואת בסיס %</label><input id="sBase" type="number" step="0.1" value="${s.baseReturn}"></div><div class="field"><label>תשואה אופטימית %</label><input id="sHigh" type="number" step="0.1" value="${s.highReturn}"></div><div class="field"><label>אינפלציה %</label><input id="sInflation" type="number" step="0.1" value="${s.inflation}"></div></div><hr><div class="actions"><button class="btn primary" onclick="saveSettings()">שמור</button><button class="btn" onclick="exportData()">ייצוא גיבוי JSON</button><button class="btn" onclick="document.getElementById('importFile').click()">ייבוא גיבוי</button><input id="importFile" type="file" accept=".json" style="display:none" onchange="importData(this.files[0])"><button class="btn danger" onclick="resetAll()">איפוס כל הנתונים</button></div>`)}
+function saveSettings(){state.settings={...state.settings,currentAge:Number(document.getElementById('sAge').value),retirementAge:Number(document.getElementById('sRetAge').value),targetSavingsRate:Number(document.getElementById('sSave').value),emergencyMonths:Number(document.getElementById('sEmergency').value),lowReturn:Number(document.getElementById('sLow').value),baseReturn:Number(document.getElementById('sBase').value),highReturn:Number(document.getElementById('sHigh').value),inflation:Number(document.getElementById('sInflation').value)};persist();closeModal();render()}
+function exportData(){const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='financial-control-center-backup.json';a.click();URL.revokeObjectURL(a.href)}
+function importData(file){if(!file)return;const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);state={...structuredClone(defaults),...x,settings:{...defaults.settings,...(x.settings||{})}};persist();closeModal();render();alert('הגיבוי נטען בהצלחה.')}catch(e){alert('קובץ הגיבוי אינו תקין.')}};r.readAsText(file)}
+function resetAll(){if(!confirm('למחוק את כל הנתונים המקומיים?'))return;state=structuredClone(defaults);persist();closeModal();render()}
+function upsert(key,item){const i=state[key].findIndex(x=>x.id===item.id);if(i>=0)state[key][i]=item;else state[key].push(item);persist()}
+function del(key,id){if(!confirm('למחוק את הפריט?'))return;state[key]=state[key].filter(x=>x.id!==id);persist();render()}
+
+document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(b.dataset.sec).classList.add('active');scrollTo({top:0,behavior:'smooth'})}));
+document.querySelectorAll('.tabbtn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.tabbtn').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.subpanel').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(b.dataset.sub).classList.add('active')}));
+if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+render();
+</script>
+<script src="./cloud.js"></script>
+</body>
+</html>
