@@ -1,3 +1,3 @@
-const CACHE='fcc-v121';const A=['./','./index.html','./manifest.webmanifest','./icon.svg','./cloud.js'];
+const CACHE='fcc-v1222';const A=['./','./index.html','./manifest.webmanifest','./icon.svg','./cloud.js'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(A))));
 self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));

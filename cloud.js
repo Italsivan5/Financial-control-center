@@ -54,10 +54,11 @@ function setAuthUI(){
   else{b.textContent='כניסה לענן';b.onclick=openAuth}
 }
 function cloudErrorText(e){
+  const code=String(e?.code||'');
   const m=String(e?.message||e||'');
-  if(/table|relation|schema cache|PGRST205/i.test(m))
-    return 'החיבור ל‑Supabase קיים, אבל טבלאות המערכת עדיין לא הוקמו. הרץ פעם אחת את supabase_schema_v12.sql ב‑SQL Editor של הפרויקט.';
-  return m||'שגיאת Supabase לא ידועה';
+  const details=String(e?.details||'');
+  const hint=String(e?.hint||'');
+  return [code&&('code='+code),m,details&&('details='+details),hint&&('hint='+hint)].filter(Boolean).join(' | ') || 'שגיאת Supabase לא ידועה';
 }
 function hasLocalData(){
   return ['transactions','accounts','holdings','watchlist','retirement','goals']
@@ -349,7 +350,7 @@ async function handleSession(session){
   subscribeRealtime();
   setCloudStatus('online','מסונכרן · '+cloudUser.email);
  }catch(e){
-  cloudReady=false;setCloudStatus('error','Supabase דורש הגדרה');showCloudBanner(cloudErrorText(e));
+  cloudReady=false;setCloudStatus('error','שגיאת Supabase');showCloudBanner('שגיאת חיבור/הרשאות: '+cloudErrorText(e));console.error('FCC Supabase initialization failed',e);
  }
 }
 async function initCloud(){
