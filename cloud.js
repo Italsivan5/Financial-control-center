@@ -55,10 +55,11 @@ function setAuthUI(){
 }
 function cloudErrorText(e){
   const code=String(e?.code||'');
-  const m=String(e?.message||e||'');
+  const message=String(e?.message||e||'');
   const details=String(e?.details||'');
   const hint=String(e?.hint||'');
-  return [code&&('code='+code),m,details&&('details='+details),hint&&('hint='+hint)].filter(Boolean).join(' | ') || 'שגיאת Supabase לא ידועה';
+  return [code&&('code='+code),message,details&&('details='+details),hint&&('hint='+hint)]
+    .filter(Boolean).join(' | ') || 'שגיאת Supabase לא ידועה';
 }
 function hasLocalData(){
   return ['transactions','accounts','holdings','watchlist','retirement','goals']
@@ -237,14 +238,24 @@ async function uploadLocalSnapshot(){
 }
 
 async function ensureHousehold(){
- let r=await sb.from('households').select('id,name').limit(1);
- if(r.error)throw r.error;
- if(r.data?.length){householdId=r.data[0].id;return}
- r=await sb.from('households').insert({name:'המשפחה שלי'}).select('id,name').single();
- if(r.error)throw r.error;
- householdId=r.data.id;
- const sr=await sb.from('financial_settings').upsert(settingsToDb(state.settings),{onConflict:'household_id'});
- if(sr.error)throw sr.error;
+  let r=await sb.from('households').select('id,name').limit(1);
+  if(r.error)throw r.error;
+
+  if(r.data?.length){
+    householdId=r.data[0].id;
+    return;
+  }
+
+  // Create the first household server-side through a secure RPC.
+  r=await sb.rpc('create_my_household',{p_name:'המשפחה שלי'});
+  if(r.error)throw r.error;
+
+  householdId=r.data;
+  if(!householdId)throw new Error('Supabase did not return a household id');
+
+  const sr=await sb.from('financial_settings')
+    .upsert(settingsToDb(state.settings),{onConflict:'household_id'});
+  if(sr.error)throw sr.error;
 }
 
 async function fetchRemoteState(){
@@ -350,7 +361,7 @@ async function handleSession(session){
   subscribeRealtime();
   setCloudStatus('online','מסונכרן · '+cloudUser.email);
  }catch(e){
-  cloudReady=false;setCloudStatus('error','שגיאת Supabase');showCloudBanner('שגיאת חיבור/הרשאות: '+cloudErrorText(e));console.error('FCC Supabase initialization failed',e);
+  cloudReady=false;setCloudStatus('error','שגיאת Supabase');showCloudBanner('שגיאת חיבור/הרשאות: '+cloudErrorText(e));console.error('FCC Supabase error',e);
  }
 }
 async function initCloud(){
