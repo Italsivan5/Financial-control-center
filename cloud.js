@@ -2,6 +2,7 @@
 const SUPABASE_URL='https://fbmkrbmhacvxhduqkvzc.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY='sb_publishable_jKpCWh2e_B2FVDcGXpLC7A_YJlYi-J6';
 const CLOUD_QUEUE_KEY='fcc_v12_cloud_queue';
+const LAST_SYNC_KEY='fcc_v13_last_sync';
 
 const sb=(window.supabase&&window.supabase.createClient)
   ? window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{
@@ -35,9 +36,13 @@ let cloudReady=false;
 let cloudLoading=false;
 let realtimeChannel=null;
 let reloadTimer=null;
+let snapshotTimer=null;
 
 function cloudQueue(){try{return JSON.parse(localStorage.getItem(CLOUD_QUEUE_KEY)||'[]')}catch(e){return []}}
-function saveCloudQueue(q){localStorage.setItem(CLOUD_QUEUE_KEY,JSON.stringify(q))}
+function lastSync(){const x=localStorage.getItem(LAST_SYNC_KEY);return x?new Date(x):null}
+function syncTimeText(){const d=lastSync();return d?new Intl.DateTimeFormat('he-IL',{hour:'2-digit',minute:'2-digit'}).format(d):'—'}
+function saveCloudQueue(q){localStorage.setItem(CLOUD_QUEUE_KEY,JSON.stringify(q));if(cloudUser&&q.length&&!cloudLoading)setCloudStatus(navigator.onLine?'pending':'pending',`${q.length} שינויים ממתינים`)}
+function markSynced(){localStorage.setItem(LAST_SYNC_KEY,new Date().toISOString());setCloudStatus('online','מסונכרן · '+syncTimeText());showCloudBanner('')}
 function setCloudStatus(mode,text){
   const p=document.getElementById('cloudPill'),t=document.getElementById('cloudStatus');
   if(!p||!t)return;
@@ -100,6 +105,11 @@ const cloudMap={
   table:'goals',
   toDb:x=>({id:x.id,household_id:householdId,name:x.name,icon:x.icon||'🎯',target_amount:Number(x.target||0),saved_amount:Number(x.saved||0),target_date:x.date,priority:x.priority||'בינונית'}),
   fromDb:x=>({id:x.id,name:x.name,icon:x.icon||'🎯',target:Number(x.target_amount),saved:Number(x.saved_amount),date:x.target_date,priority:x.priority})
+ },
+ netWorthSnapshots:{
+  table:'net_worth_snapshots',conflict:'household_id,snapshot_date',
+  toDb:x=>({household_id:householdId,snapshot_date:x.date,liquid:Number(x.liquid||0),investments:Number(x.investments||0),retirement:Number(x.retirement||0),property_value:Number(x.property||0),debt:Number(x.debt||0),net_worth:Number(x.net||0),source:x.source||'app',data_quality:Number(x.dataQuality||0)}),
+  fromDb:x=>({date:x.snapshot_date,liquid:Number(x.liquid),investments:Number(x.investments),retirement:Number(x.retirement),property:Number(x.property_value),debt:Number(x.debt),net:Number(x.net_worth),source:x.source||'app',dataQuality:Number(x.data_quality||0)})
  }
 };
 
@@ -114,11 +124,11 @@ function queueCloud(op){
   const q=cloudQueue();
   if(op.op==='upsert'){
     for(let i=q.length-1;i>=0;i--){
-      if(q[i].op==='upsert'&&q[i].key===op.key&&q[i].item?.id===op.item?.id){q.splice(i,1);break}
+      if(q[i].op==='upsert'&&q[i].key===op.key&&((q[i].item?.id&&q[i].item.id===op.item?.id)||(q[i].item?.date&&q[i].item.date===op.item?.date))){q.splice(i,1);break}
     }
   }
   q.push(op); saveCloudQueue(q);
-  if(cloudReady&&navigator.onLine)flushCloudQueue().catch(()=>{});
+  if(cloudReady&&navigator.onLine)flushCloudQueue().catch(e=>{setCloudStatus('error',`${cloudQueue().length} שינויים לא סונכרנו`);showCloudBanner('שגיאת סנכרון: '+cloudErrorText(e));console.error('FCC sync write failed',e)});
 }
 
 /* Wrap the existing local-first functions. */
@@ -126,13 +136,14 @@ const localUpsert=upsert;
 upsert=function(key,item){
   localUpsert(key,item);
   queueCloud({op:'upsert',key,item:structuredClone(item)});
+  if(['accounts','retirement','holdings'].includes(key))captureNetWorthSnapshot(key+'-change');
 };
 
 const localDel=del;
 del=function(key,id){
   const before=state[key]?.length||0;
   localDel(key,id);
-  if((state[key]?.length||0)<before)queueCloud({op:'delete',key,id});
+  if((state[key]?.length||0)<before){queueCloud({op:'delete',key,id});if(['accounts','retirement','holdings'].includes(key))captureNetWorthSnapshot(key+'-delete')}
 };
 
 const localSaveSettings=saveSettings;
@@ -145,6 +156,7 @@ const localResetAll=resetAll;
 resetAll=async function(){
   if(cloudReady){
     if(!confirm('למחוק את כל הנתונים גם מהמכשיר וגם מהענן?'))return;
+    if(typeof createSafetyBackup==='function')createSafetyBackup('before-reset-cloud');
     try{await clearRemoteState()}catch(e){alert('מחיקת הענן נכשלה: '+cloudErrorText(e));return}
     state=structuredClone(defaults); saveCloudQueue([]); persist(); closeModal(); render();
   }else{
@@ -156,67 +168,29 @@ async function openAuth(){
  if(!sb)return alert('ספריית Supabase לא נטענה. בדוק חיבור לאינטרנט.');
  openModal('כניסה ל‑Financial Control Center',`
  <div class="auth-card">
-  <div class="auth-switch">
-   <button id="loginTab" class="active" onclick="switchAuth('login')">כניסה</button>
-   <button id="signupTab" onclick="switchAuth('signup')">יצירת חשבון</button>
-  </div>
+  <div class="note" style="margin-bottom:12px">🔒 המערכת מוגדרת למשתמש קיים בלבד. הרשמה חדשה חסומה בפרויקט.</div>
   <div class="field"><label>אימייל</label><input id="authEmail" type="email" autocomplete="email" placeholder="name@example.com"></div>
-  <div class="field"><label>סיסמה</label><input id="authPassword" type="password" autocomplete="current-password" placeholder="לפחות 8 תווים"></div>
-  <input id="authMode" type="hidden" value="login">
+  <div class="field"><label>סיסמה</label><input id="authPassword" type="password" autocomplete="current-password" placeholder="הסיסמה שלך"></div>
   <button id="authSubmit" class="btn primary" onclick="submitAuth()">כניסה</button>
-  <button class="btn" onclick="resendConfirmation()">שלח שוב מייל אימות</button>
-  <div class="auth-note">החשבון משמש לסנכרון בין מכשירים. האפליקציה משתמשת רק ב‑Publishable Key הציבורי וב‑RLS כדי להגביל את הנתונים למשתמש/משפחה המחוברים.</div>
+  <div class="auth-note">החשבון משמש לסנכרון בין המחשב והטלפון. אין באפליקציה אפשרות ליצור משתמש נוסף.</div>
  </div>`);
 }
-
-async function resendConfirmation(){
-  const email=document.getElementById('authEmail')?.value.trim();
-  if(!email)return alert('הזן קודם את כתובת האימייל.');
-  try{
-    const r=await sb.auth.resend({
-      type:'signup',
-      email,
-      options:{emailRedirectTo:authRedirectUrl()}
-    });
-    if(r.error)throw r.error;
-    alert('מייל אימות חדש נשלח. השתמש במייל החדש ביותר.');
-  }catch(e){alert('שליחת מייל האימות נכשלה: '+cloudErrorText(e))}
-}
-function switchAuth(mode){
- document.getElementById('authMode').value=mode;
- document.getElementById('loginTab').classList.toggle('active',mode==='login');
- document.getElementById('signupTab').classList.toggle('active',mode==='signup');
- document.getElementById('authSubmit').textContent=mode==='login'?'כניסה':'יצירת חשבון';
-}
 async function submitAuth(){
- const email=document.getElementById('authEmail').value.trim();
- const password=document.getElementById('authPassword').value;
- const mode=document.getElementById('authMode').value;
- if(!email||password.length<8)return alert('יש להזין אימייל וסיסמה של לפחות 8 תווים.');
- const b=document.getElementById('authSubmit'); b.disabled=true; b.textContent='מתחבר...';
- try{
-  const r=mode==='signup'
-    ? await sb.auth.signUp({
-        email,
-        password,
-        options:{emailRedirectTo:authRedirectUrl()}
-      })
-    : await sb.auth.signInWithPassword({email,password});
-  if(r.error)throw r.error;
-  if(mode==='signup'&&!r.data.session){
-   alert('החשבון נוצר. אם אישור אימייל פעיל ב‑Supabase, אשר את ההודעה שקיבלת ואז חזור לאפליקציה ובצע כניסה.');
-   closeModal();
-  }else closeModal();
- }catch(e){alert('הפעולה נכשלה: '+cloudErrorText(e))}
- finally{if(document.getElementById('authSubmit')){b.disabled=false;b.textContent=mode==='login'?'כניסה':'יצירת חשבון'}}
+ const email=document.getElementById('authEmail').value.trim(),password=document.getElementById('authPassword').value;
+ if(!email||!password)return alert('יש להזין אימייל וסיסמה.');
+ const b=document.getElementById('authSubmit');b.disabled=true;b.textContent='מתחבר...';
+ try{const r=await sb.auth.signInWithPassword({email,password});if(r.error)throw r.error;closeModal()}catch(e){alert('הכניסה נכשלה: '+cloudErrorText(e))}finally{if(document.getElementById('authSubmit')){b.disabled=false;b.textContent='כניסה'}}
 }
 function openCloudAccount(){
+ const q=cloudQueue(),ls=lastSync();
  openModal('חשבון וסנכרון',`
  <div class="auth-card">
-  <div class="color-stat green"><b>${esc(cloudUser?.email||'')}</b><div class="small muted">מחובר ל‑Supabase</div></div>
-  <div class="sync-row"><span>סטטוס</span><b>${cloudReady?'☁️ מסונכרן':'🔄 מתחבר'}</b></div>
+  <div class="color-stat green"><b>${esc(cloudUser?.email||'')}</b><div class="small muted">משתמש יחיד · Supabase</div></div>
+  <div class="sync-row"><span>מצב חיבור</span><b>${navigator.onLine?'מחובר לאינטרנט':'Offline'}</b></div>
+  <div class="sync-row"><span>סנכרון אחרון</span><b>${ls?ls.toLocaleString('he-IL'):'עדיין לא הושלם'}</b></div>
+  <div class="sync-row"><span>שינויים ממתינים</span><b>${q.length}</b></div>
   <div class="actions">
-   <button class="btn primary" onclick="manualCloudSync()">סנכרון עכשיו</button>
+   <button class="btn primary" onclick="manualCloudSync()">סנכרן עכשיו</button>
    <button class="btn" onclick="uploadLocalSnapshot()">העלה נתונים מקומיים לענן</button>
    <button class="btn" onclick="logoutCloud()">יציאה</button>
   </div>
@@ -227,13 +201,13 @@ async function manualCloudSync(){
  try{
   setCloudStatus('syncing','מסנכרן...');
   await flushCloudQueue(); await loadCloudState({silent:true});
-  setCloudStatus('online','מסונכרן · '+(cloudUser?.email||'')); closeModal();
+  markSynced(); closeModal();
  }catch(e){setCloudStatus('error','שגיאת סנכרון');alert(cloudErrorText(e))}
 }
 async function uploadLocalSnapshot(){
  if(!cloudReady)return;
  if(!confirm('להחליף את הנתונים הקיימים בענן בנתונים שנמצאים כרגע במכשיר?'))return;
- try{await pushSnapshotToCloud(state,true);saveCloudQueue([]);setCloudStatus('online','מסונכרן · '+cloudUser.email);closeModal()}
+ try{await pushSnapshotToCloud(state,true);saveCloudQueue([]);markSynced();closeModal()}
  catch(e){alert(cloudErrorText(e))}
 }
 
@@ -296,7 +270,7 @@ async function applyCloudOp(op){
  }
  const cfg=cloudMap[op.key]; if(!cfg)return;
  if(op.op==='upsert'){
-  const r=await sb.from(cfg.table).upsert(cfg.toDb(op.item),{onConflict:'id'});
+  const r=await sb.from(cfg.table).upsert(cfg.toDb(op.item),{onConflict:cfg.conflict||'id'});
   if(r.error)throw r.error;
  }else if(op.op==='delete'){
   const r=await sb.from(cfg.table).delete().eq('id',op.id).eq('household_id',householdId);
@@ -311,7 +285,7 @@ async function flushCloudQueue(){
   await applyCloudOp(q[0]);
   q.shift(); saveCloudQueue(q);
  }
- setCloudStatus('online','מסונכרן · '+cloudUser.email);
+ markSynced();
 }
 async function clearRemoteState(){
  if(!cloudReady)return;
@@ -325,16 +299,33 @@ async function pushSnapshotToCloud(snapshot,replace=false){
  for(const [key,cfg] of Object.entries(cloudMap)){
   const rows=(snapshot[key]||[]).map(cfg.toDb);
   if(rows.length){
-   const r=await sb.from(cfg.table).upsert(rows,{onConflict:'id'});
+   const r=await sb.from(cfg.table).upsert(rows,{onConflict:cfg.conflict||'id'});
    if(r.error)throw r.error;
   }
  }
  const sr=await sb.from('financial_settings').upsert(settingsToDb(snapshot.settings||defaults.settings),{onConflict:'household_id'});
  if(sr.error)throw sr.error;
 }
+function captureNetWorthSnapshot(reason='change',immediate=false){
+ clearTimeout(snapshotTimer);
+ const run=()=>{
+  try{
+   const w=wealth(),q=quality();
+   if(!(w.liquid||w.invest||w.retirement||w.property||w.debt))return;
+   const item={date:today(),liquid:w.liquid,investments:w.invest,retirement:w.retirement,property:w.property,debt:w.debt,net:w.net,source:reason,dataQuality:q.pct};
+   state.netWorthSnapshots=Array.isArray(state.netWorthSnapshots)?state.netWorthSnapshots:[];
+   const i=state.netWorthSnapshots.findIndex(x=>x.date===item.date);if(i>=0)state.netWorthSnapshots[i]={...state.netWorthSnapshots[i],...item};else state.netWorthSnapshots.push(item);
+   persist();queueCloud({op:'upsert',key:'netWorthSnapshots',item:structuredClone(item)});renderNetWorthHistory?.();
+   if(immediate&&cloudReady&&navigator.onLine)flushCloudQueue().catch(e=>showCloudBanner('שמירת צילום ההון נכשלה: '+cloudErrorText(e)));
+  }catch(e){console.warn('Snapshot failed',e)}
+ };
+ if(immediate)run();else snapshotTimer=setTimeout(run,250);
+}
+window.captureNetWorthSnapshot=captureNetWorthSnapshot;
+
 function scheduleReload(){
  clearTimeout(reloadTimer);
- reloadTimer=setTimeout(()=>{if(!cloudQueue().length)loadCloudState().catch(()=>{})},700);
+ reloadTimer=setTimeout(()=>{if(!cloudQueue().length)loadCloudState().then(()=>markSynced()).catch(e=>{setCloudStatus('error','שגיאת רענון');showCloudBanner('שגיאת רענון מהענן: '+cloudErrorText(e))})},700);
 }
 function subscribeRealtime(){
  if(!sb||!householdId)return;
@@ -359,7 +350,8 @@ async function handleSession(session){
   if(cloudQueue().length)await flushCloudQueue();
   await loadCloudState();
   subscribeRealtime();
-  setCloudStatus('online','מסונכרן · '+cloudUser.email);
+  captureNetWorthSnapshot('daily-open');
+  markSynced();
  }catch(e){
   cloudReady=false;setCloudStatus('error','שגיאת Supabase');showCloudBanner('שגיאת חיבור/הרשאות: '+cloudErrorText(e));console.error('FCC Supabase error',e);
  }
@@ -376,7 +368,9 @@ async function initCloud(){
  await handleSession(data.session);
  sb.auth.onAuthStateChange((event,session)=>setTimeout(()=>handleSession(session),0));
 }
-window.addEventListener('online',()=>{if(cloudReady)flushCloudQueue().then(()=>loadCloudState()).catch(()=>{})});
-window.addEventListener('focus',()=>{if(cloudReady&&!cloudQueue().length)loadCloudState().catch(()=>{})});
+window.addEventListener('online',()=>{if(cloudReady){setCloudStatus('syncing','חזר החיבור · מסנכרן...');flushCloudQueue().then(()=>loadCloudState()).then(()=>markSynced()).catch(e=>{setCloudStatus('error','הסנכרון נכשל');showCloudBanner(cloudErrorText(e))})}});
+window.addEventListener('offline',()=>{if(cloudUser)setCloudStatus('pending',cloudQueue().length?`${cloudQueue().length} שינויים ממתינים`:'Offline · השינויים יישמרו מקומית')});
+window.addEventListener('focus',()=>{if(cloudReady&&!cloudQueue().length)loadCloudState().then(()=>markSynced()).catch(()=>{})});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&cloudReady&&!cloudQueue().length)loadCloudState().then(()=>markSynced()).catch(()=>{})});
 
 initCloud();
